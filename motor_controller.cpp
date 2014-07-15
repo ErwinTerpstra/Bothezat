@@ -15,7 +15,7 @@ void MotorController::Setup()
 	
 }
 
-void MotorController::Loop()
+void MotorController::Loop(uint32_t dt)
 {
 	
 }

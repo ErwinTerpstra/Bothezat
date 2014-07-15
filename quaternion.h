@@ -23,6 +23,15 @@ struct Quaternion
 
 	}  
 
+	void Multiply(float scalar)
+	{
+		x *= scalar;
+		y *= scalar;
+		z *= scalar;
+		w *= scalar;
+  	}
+
+
 	void Multiply(const Quaternion& other)
 	{
 	    float w2 = w * other.w - (x * other.x + y * other.y + z * other.z);
@@ -45,16 +54,16 @@ struct Quaternion
 
 	void Normalize() 
 	{
-		float lengthSq = sqrt(x * x + y * y + z * z + w * w);
+		float lengthSq = x * x + y * y + z * z + w * w;
 
-		if (lengthSq == 0.0f)
+		if (lengthSq < FLT_EPSILON)
 		{
 			w = 1.0f; 
 			x = y = z = 0.0f;
 		}
 		else
 		{
-			float recip = 1.0f / lengthSq;
+			float recip = 1.0f / sqrt(lengthSq);
 
 			w *= recip;
 			x *= recip;
@@ -66,6 +75,38 @@ struct Quaternion
 	Quaternion Conjugate() const
 	{
 		return Quaternion(-x, -y, -z, w);
+	}
+
+	void ToEulerAngles(float& yaw, float& pitch, float& roll) const
+	{
+	    const float w2 = w * w;
+	    const float x2 = x * x;
+	    const float y2 = y * y;
+	    const float z2 = z * z;
+	    const float unitLength = w2 + x2 + y2 + z2;    // Normalised == 1, otherwise correction divisor.
+	    const float abcd = w * x + y * z;
+
+	    if (abcd > (0.5 - FLT_EPSILON) * unitLength)
+	    {
+	        yaw = 2 * atan2(y, w);
+	        pitch = PI;
+	        roll = 0;
+	    }
+	    else if (abcd < (-0.5 + FLT_EPSILON) * unitLength)
+	    {
+	        yaw = -2 * atan2(y, w);
+	        pitch = -PI;
+	        roll = 0;
+	    }
+	    else
+	    {
+	        const float adbc = w * z - x * y;
+	        const float acbd = w * y - x * z;
+
+	        yaw = atan2(2 * adbc, 1 - 2 * (z2 + x2));
+	        pitch = asin(2 * abcd / unitLength);
+	        roll = atan2(2 * acbd, 1 - 2 * (y2 + x2));
+	    }
 	}
 
 	Quaternion& operator=(const Quaternion& other)
@@ -80,6 +121,34 @@ struct Quaternion
 
 	    return *this;
 	}
+
+	Quaternion operator+(const Quaternion& rhs) const
+	{
+		Quaternion result = *this;
+		result.x += rhs.x;
+		result.y += rhs.y;
+		result.z += rhs.z;
+		result.w += rhs.w;
+		return result;
+	}
+
+	Quaternion operator*(const Quaternion& rhs) const
+	{
+		Quaternion result = *this;
+		result.Multiply(rhs);
+		return result;
+	}
+
+	Quaternion operator*(const float& rhs) const
+	{
+		Quaternion result = *this;
+		result.x *= rhs;
+		result.y *= rhs;
+		result.z *= rhs;
+		result.w *= rhs;
+		return result;
+	}
+
 
 	static Quaternion& AngleAxis(Quaternion& out, float angle, const Vector3& axis) 
 	{
@@ -96,15 +165,17 @@ struct Quaternion
 		return out;
 	}
 
+	static Quaternion& lerp(Quaternion& out, const Quaternion &lhs, const Quaternion& rhs, float t) 
+	{ 
+		out = lhs * (1.0f - t) + (rhs * t);
+		out.Normalize();
+
+		return out;
+	}
+
 
 };
 
-inline Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs)
-{
-	Quaternion result = lhs;
-	result.Multiply(rhs);
-	return result;
-}
 
 }
 

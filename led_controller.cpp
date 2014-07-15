@@ -19,7 +19,7 @@ void LedController::Setup()
 	
 }
 
-void LedController::Loop()
+void LedController::Loop(uint32_t dt)
 {
 	uint8_t numPixels = output.numPixels();
 

@@ -33,9 +33,9 @@ void PwmReceiver::Setup()
 	// TIMER_CLOCK4		MCK/128
 }
 
-void PwmReceiver::Loop()
+void PwmReceiver::Loop(uint32_t dt)
 {
-	Receiver::Loop();
+	Receiver::Loop(dt);
 
 	uint16_t channels[Receiver::MAX_CHANNELS];				// Pulse length for each channel
 	uint8_t channelsReading = PinConfig::RX_PWM_AMOUNT;		// Amount of pin which are still being measured.

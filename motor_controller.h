@@ -30,7 +30,7 @@ protected:
 public:
 	virtual void Setup();
 
-	virtual void Loop();
+	virtual void Loop(uint32_t dt);
 	
 };
 

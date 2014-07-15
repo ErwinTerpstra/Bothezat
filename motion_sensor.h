@@ -17,8 +17,8 @@ friend class Module<MotionSensor>;
 private:
 	MPU6050Data mpuData;
 
-	uint8_t accelRange;
-	uint16_t gyroRange;
+	uint16_t accelRange, gyroRange;
+	float accelScale, gyroScale;
 
 	Quaternion orientation;
 
@@ -28,8 +28,10 @@ protected:
 public:
 
 	virtual void Setup();
-	virtual void Loop();
+	virtual void Loop(uint32_t dt);
 
+	void PrintOrientation();
+	
 private:
 	void SetupMPU();
 	void ReadMPU();

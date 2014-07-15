@@ -70,6 +70,25 @@ struct Vector3
 		y *= rhs;
 		z *= rhs;
 	}
+	
+	// Binary operators
+	Vector3 operator+(const Vector3& rhs) const
+	{
+		Vector3 result = *this;
+		return result += rhs;
+	}
+
+	Vector3 operator-(const Vector3& rhs) const
+	{
+		Vector3 result = *this;
+		return result -= rhs;
+	}
+
+	Vector3 operator*(const float& rhs) const
+	{
+		Vector3 result = *this;
+		return result *= rhs;
+	}
 
 	static float Dot(const Vector3& a, const Vector3& b)
 	{
@@ -90,26 +109,11 @@ struct Vector3
 		out.y = a.x * b.z - a.z * b.x;
 		out.z = a.x * b.y - a.y * b.x;
 	}
+
+	static Vector3 Forward() { return Vector3(0.0f, 1.0f, 0.0f); }
+	static Vector3 Up() { return Vector3(0.0f, 0.0f, 1.0f); }
+	static Vector3 Right() { return Vector3(!.0f, 0.0f, 0.0f); }
 };
-	
-// Binary operators
-inline Vector3 operator+(const Vector3& lhs, const Vector3& rhs)
-{
-	Vector3 result = lhs;
-	return result += rhs;
-}
-
-inline Vector3 operator-(const Vector3& lhs, const Vector3& rhs)
-{
-	Vector3 result = lhs;
-	return result -= rhs;
-}
-
-inline Vector3 operator*(const Vector3& lhs, const float& rhs)
-{
-	Vector3 result = lhs;
-	return result *= rhs;
-}
 
 }
 

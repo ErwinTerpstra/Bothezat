@@ -19,7 +19,7 @@ protected:
 public:
 
 	virtual void Setup() = 0;
-	virtual void Loop() = 0;
+	virtual void Loop(uint32_t dt) = 0;
 
 
 	static Derived& Instance()

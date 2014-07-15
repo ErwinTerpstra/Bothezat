@@ -65,12 +65,26 @@ public:
 
 	}
 
-	virtual void Loop()
+	virtual void Loop(uint32_t dt)
 	{
 		
 	}
 
 	bool IsConnected() const { return connected; }
+
+	void PrintChannels() const
+	{
+		Serial.println(F("Channels: "));
+		Serial.print(channels[THROTTLE], DEC);
+		Serial.print(F(", "));
+		Serial.print(channels[ELEVATOR], DEC);
+		Serial.print(F(", "));
+		Serial.print(channels[AILERON], DEC);
+		Serial.print(F(", "));
+		Serial.print(channels[RUDDER], DEC);
+		Serial.println(F(""));
+		Serial.println(F(""));
+	}
 
 protected:
 
@@ -82,17 +96,6 @@ protected:
 			uint8_t target = mapping[channel];
 			channels[target] = input[channel];
 		}
-		
-		Serial.println(F("Channels: "));
-		Serial.print(channels[THROTTLE], DEC);
-		Serial.print(F(", "));
-		Serial.print(channels[ELEVATOR], DEC);
-		Serial.print(F(", "));
-		Serial.print(channels[AILERON], DEC);
-		Serial.print(F(", "));
-		Serial.print(channels[RUDDER], DEC);
-		Serial.println(F(""));
-		Serial.println(F(""));
 	}
 
 	void SetConnected(bool connected) { this->connected = connected; }
