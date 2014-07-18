@@ -68,5 +68,5 @@ void loop()
 
 	loopEnd = micros();
 
-	delay(max(50 - ((loopEnd - loopStart) / 1000), 1));
+	delay(constrain(10 - ((loopEnd - loopStart) / 1000), 1, 10));
 }

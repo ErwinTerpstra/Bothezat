@@ -44,6 +44,8 @@ struct Quaternion
 	    y = x2;
 	    y = y2;
 	    z = z2;
+
+	    Normalize();
   	}
 
   	void Identity()

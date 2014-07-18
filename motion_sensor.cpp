@@ -24,7 +24,7 @@ void MotionSensor::Loop(uint32_t dt)
 	ReadMPU();
 	
 
-	float ms = dt / 1000.0f;
+	float ms = dt / 1000000.0f;
 	Quaternion yaw, pitch, roll;
 
 	Quaternion::AngleAxis(yaw,		mpuData.gyroZ * gyroScale * ms, Vector3::Up());
@@ -49,7 +49,7 @@ void MotionSensor::SetupMPU()
 	accelScale = (1.0f / INT16_MAX) * accelRange;
 
 	gyroRange = 1000; 
-	gyroScale = (1000.0f / INT16_MAX) * gyroRange;
+	gyroScale = (1.0f / INT16_MAX) * gyroRange;
 	I2C::WriteRegister(MPU6050_I2C_ADDRESS, MPU6050_ACCEL_CONFIG, MPU6050_AFS_SEL_8G);
 	I2C::WriteRegister(MPU6050_I2C_ADDRESS, MPU6050_GYRO_CONFIG, MPU6050_FS_SEL_1000);
 
