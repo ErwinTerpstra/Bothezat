@@ -31,6 +31,14 @@ struct Vector3
 		}
 	}
 
+	Vector3 Normalized()
+	{
+		Vector3 result = *this;
+		result.Normalize();
+
+		return result;
+	}
+
 	float LengthSq() const { return x * x + y * y + z * z; }
 	float Length() const { return sqrt(LengthSq()); }
 
@@ -71,23 +79,9 @@ struct Vector3
 		z *= rhs;
 	}
 	
-	// Binary operators
-	Vector3 operator+(const Vector3& rhs) const
+	Vector3 operator-() const
 	{
-		Vector3 result = *this;
-		return result += rhs;
-	}
-
-	Vector3 operator-(const Vector3& rhs) const
-	{
-		Vector3 result = *this;
-		return result -= rhs;
-	}
-
-	Vector3 operator*(const float& rhs) const
-	{
-		Vector3 result = *this;
-		return result *= rhs;
+		return Vector3(-x, -y, -z);
 	}
 
 	static float Dot(const Vector3& a, const Vector3& b)
@@ -112,8 +106,28 @@ struct Vector3
 
 	static Vector3 Forward() { return Vector3(0.0f, 1.0f, 0.0f); }
 	static Vector3 Up() { return Vector3(0.0f, 0.0f, 1.0f); }
-	static Vector3 Right() { return Vector3(!.0f, 0.0f, 0.0f); }
+	static Vector3 Right() { return Vector3(1.0f, 0.0f, 0.0f); }
 };
+
+	
+// Binary operators
+Vector3 operator+(const Vector3& lhs, const Vector3& rhs)
+{
+	Vector3 result = lhs;
+	return result += rhs;
+}
+
+Vector3 operator-(const Vector3& lhs, const Vector3& rhs)
+{
+	Vector3 result = lhs;
+	return result -= rhs;
+}
+
+Vector3 operator*(const Vector3& lhs, const float& rhs)
+{
+	Vector3 result = lhs;
+	return result *= rhs;
+}
 
 }
 

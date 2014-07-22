@@ -10,6 +10,7 @@
 #include "pwm_receiver.h"
 #include "motor_controller.h"
 #include "led_controller.h"
+#include "timer.h"
 
 using namespace bothezat;
 
@@ -18,31 +19,41 @@ PwmReceiver& receiver = PwmReceiver::Instance();
 LedController& ledController = LedController::Instance();
 MotorController& motorController = MotorController::Instance();
 
-uint32_t dt, timer;
+Timer timer(TC0, 0);
+uint32_t dt, debugTime;
 uint64_t loopStart, lastLoopStart, loopEnd;
+const uint16_t loopTime = 0;
 
 void setup()
 {
 	Serial.begin(115200);
 	Serial.println("======== Bothezat ========");
-	Serial.print("Initializing...");
+	Serial.println("Initializing...");
+
+	Timer::EnableTimers();
 
 	I2C::Setup();
 
 	motionSensor.Setup();
 	receiver.Setup();
 	ledController.Setup();
+	motorController.Setup();
 
-	dt = 0;
-	timer = 0;
-	loopStart = lastLoopStart = micros();
+	uint16_t precision = timer.SetPrecision(2);
+	Debug::Print("Timer set to %d us precision\n", precision);
 
-	Serial.println(" Complete!");
+	timer.Start();
+
+	dt = 10;
+	debugTime = 0;
+	loopStart = lastLoopStart = timer.Micros();
+
+	Serial.println("Initialization complete!");
 }
 
 void loop()
 {
-	loopStart = micros();
+	loopStart = timer.Micros();
 
 	// Overflow, don't update deltatime
 	if (lastLoopStart < loopStart)
@@ -50,23 +61,27 @@ void loop()
 		dt = loopStart - lastLoopStart;
 		lastLoopStart = loopStart;
 	}
-
-	motionSensor.Loop(dt);
-	receiver.Loop(dt);
-	ledController.Loop(dt);
-	motorController.Loop(dt);
-
-	timer += dt;
-
-	if (timer >= 1000000L)
+	else
 	{
-		motionSensor.PrintOrientation();
-		Serial.println(dt, DEC);
-
-		timer = 0;
+		Serial.println(F("Overflow!"));
 	}
 
-	loopEnd = micros();
+	motionSensor.Loop(dt);
+	//receiver.Loop(dt);
+	//ledController.Loop(dt);
+	motorController.Loop(dt);
 
-	delay(constrain(10 - ((loopEnd - loopStart) / 1000), 1, 10));
+	debugTime += dt;
+
+	if (debugTime >= 1000000L)
+	{
+		motionSensor.PrintOrientation();
+		receiver.PrintChannels();
+		Serial.println(dt);
+		debugTime = 0;
+	}
+
+	loopEnd = timer.Micros();
+
+	delay(constrain(loopTime - ((loopEnd - loopStart) / 1000), 0, loopTime));
 }

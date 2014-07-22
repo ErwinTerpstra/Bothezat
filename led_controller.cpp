@@ -5,7 +5,7 @@
 
 using namespace bothezat;
 
-LedController::LedController() : output(8, PinConfig::LED_CONTROLLER, NEO_GRB + NEO_KHZ800), shift(0)
+LedController::LedController() : output(8, Config::Pins::LED_CONTROLLER, NEO_GRB + NEO_KHZ800), shift(0)
 {
 
 }
@@ -33,5 +33,5 @@ void LedController::Loop(uint32_t dt)
     output.setPixelColor(shift++ % numPixels, 255, 255, 255);
     output.setPixelColor(shift++ % numPixels, 255, 255, 255); 
 
-	output.show();
+    output.show();
 }

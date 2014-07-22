@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 #include "receiver.h"
+#include "timer.h"
 
 namespace bothezat
 {
@@ -15,8 +16,8 @@ class PwmReceiver : public Receiver<PwmReceiver>
 friend class Module<PwmReceiver>;
 
 
-public:
-
+private:
+	Timer timer;
 
 protected:
 	PwmReceiver();

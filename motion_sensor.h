@@ -21,6 +21,7 @@ private:
 	float accelScale, gyroScale;
 
 	Quaternion orientation;
+	Vector3 acceleration;
 
 protected:
 	MotionSensor();

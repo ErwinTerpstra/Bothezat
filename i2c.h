@@ -20,17 +20,17 @@ public:
 	{
 		ERR_OK				= 0,
 
-		ERR_REG_SELECT_FAILED		= -10,
+		ERR_REG_SELECT_FAILED		= 10,
 
-		ERR_BUFFER_OVERFLOW			= -11,
-		ERR_NACK_ADDRESS			= -12,
-		ERR_NACK_DATA				= -13,
-		ERR_UNKOWN_ERROR			= -14,
+		ERR_BUFFER_OVERFLOW			= 11,
+		ERR_NACK_ADDRESS			= 12,
+		ERR_NACK_DATA				= 13,
+		ERR_UNKOWN_ERROR			= 14,
 
-		ERR_DEVICE_ABORTED 			= -15,
+		ERR_DEVICE_ABORTED 			= 15,
 
 
-		ERR_END_TRANSMISION_BASE	= -10,
+		ERR_END_TRANSMISION_BASE	= 10,
 	};
 
 public:
@@ -38,6 +38,7 @@ public:
 
 	static void Setup()
 	{
+		ResetBus();
 		Wire.begin();
 	}
 
@@ -58,7 +59,7 @@ public:
 		error = Wire.endTransmission(false);
 
 		if (error != 0)
-			return ERR_END_TRANSMISION_BASE - error;	// Convert error to enum value
+			return ERR_END_TRANSMISION_BASE + error;	// Convert error to enum value
 
 		Wire.requestFrom(address, size, true);
 
@@ -109,6 +110,52 @@ public:
 	{
 		return Write(address, reg, &data, 1);
 	}
+
+	/*
+	 * Resets the I2C bus by forcing a pulse to the clock pin
+	 */
+	static void ResetBus()
+	{
+		pinMode(PIN_WIRE_SCL, OUTPUT);
+		bool busStuck;
+
+		do
+		{
+			pinMode(PIN_WIRE_SDA, INPUT_PULLUP);
+			delayMicroseconds(5);
+
+			busStuck = false;
+
+			// I2C bus stuck, try clocking through all data a slave still wants to send
+			while (digitalRead(PIN_WIRE_SDA) == LOW)
+			{
+				busStuck = true;
+
+				digitalWrite(PIN_WIRE_SCL, HIGH);	delayMicroseconds(5);
+				digitalWrite(PIN_WIRE_SCL, LOW);	delayMicroseconds(5);
+				digitalWrite(PIN_WIRE_SCL, HIGH);	delayMicroseconds(5);
+			}
+
+			if (busStuck)
+			{
+				pinMode(PIN_WIRE_SDA, OUTPUT);
+				delayMicroseconds(5);
+
+				// Generate a stop condition
+				digitalWrite(PIN_WIRE_SCL, HIGH);
+				digitalWrite(PIN_WIRE_SDA, LOW);
+				delayMicroseconds(5);
+				digitalWrite(PIN_WIRE_SDA, HIGH);
+				delayMicroseconds(5);
+
+				digitalWrite(PIN_WIRE_SCL, HIGH);	delayMicroseconds(5);
+				digitalWrite(PIN_WIRE_SCL, LOW);	delayMicroseconds(5);
+				digitalWrite(PIN_WIRE_SCL, HIGH);	delayMicroseconds(5);
+			}
+
+		} while (busStuck);
+	}
+
 };
 	
 

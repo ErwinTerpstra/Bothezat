@@ -9,8 +9,10 @@
 
 #include "config.h"
 #include "util.h"
+#include "debug.h"
 
 #include "vector3.h"
 #include "quaternion.h"
+
 
 #endif

@@ -9,7 +9,7 @@
 
 using namespace bothezat;
 
-MotionSensor::MotionSensor() : orientation()
+MotionSensor::MotionSensor() : orientation(), yaw(0.0f), pitch(0.0f), roll(0.0f)
 {
 	
 }
@@ -22,17 +22,36 @@ void MotionSensor::Setup()
 void MotionSensor::Loop(uint32_t dt)
 {
 	ReadMPU();
-	
 
-	float ms = dt / 1000000.0f;
+	float deltaSeconds = dt / 1000000.0f;
+	float scale = gyroScale * deltaSeconds * DEG_2_RAD;
+
+	// Convert axis rotations to quaternions
 	Quaternion yaw, pitch, roll;
+	Quaternion::AngleAxis(yaw,		mpuData.gyroZ * scale, Vector3::Up());
+	Quaternion::AngleAxis(pitch,	mpuData.gyroX * scale, Vector3::Right());
+	Quaternion::AngleAxis(roll,		mpuData.gyroY * scale, Vector3::Forward());
 
-	Quaternion::AngleAxis(yaw,		mpuData.gyroZ * gyroScale * ms, Vector3::Up());
-	Quaternion::AngleAxis(pitch,	mpuData.gyroX * gyroScale * ms, Vector3::Right());
-	Quaternion::AngleAxis(roll,		mpuData.gyroY * gyroScale * ms, Vector3::Forward());
-
+	// Apply relative rotations to saved orientation
 	Quaternion rotation = yaw * pitch * roll;
-	orientation = orientation * rotation;
+	orientation = rotation * orientation;
+
+	// Convert accelerometer values to G normalized
+	acceleration.x = mpuData.accelX * accelScale;
+	acceleration.y = mpuData.accelY * accelScale;
+	acceleration.z = mpuData.accelZ * accelScale;
+
+	// Only use accelerometer values if total acceleration is below threhold
+	float magnitude = acceleration.Length();
+	if (magnitude < Config::MS_ACCEL_MAX)
+	{
+		Vector3 up = -acceleration.Normalized();
+		
+		Vector3 forward = orientation * Vector3::Forward();
+		Vector3 right = Vector3::Cross(forward, up);
+		forward = Vector3::Cross(up, right);
+
+	}
 }
 
 void MotionSensor::SetupMPU()
@@ -61,6 +80,9 @@ void MotionSensor::ReadMPU()
 {
 	uint8_t error = I2C::Read(MPU6050_I2C_ADDRESS, MPU6050_ACCEL_XOUT_H, (uint8_t*) &mpuData, sizeof(mpuData));
 
+	if (error != I2C::ERR_OK)
+		Serial.println(error);
+
 	// Correct endianness difference between uC and mpu data
 	Util::SwapEndianness((uint8_t*) &mpuData.accelX, sizeof(mpuData.accelX));
 	Util::SwapEndianness((uint8_t*) &mpuData.accelY, sizeof(mpuData.accelY));
@@ -78,12 +100,8 @@ void MotionSensor::PrintOrientation()
 	float yaw, pitch, roll;
 	orientation.ToEulerAngles(yaw, pitch, roll);
 
-	Serial.println(F("Orientation:"));
-	Serial.print(F("Yaw = "));
-	Serial.println(yaw * RAD_2_DEG, DEC);
-	Serial.print(F("Pitch = "));
-	Serial.println(pitch * RAD_2_DEG, DEC);
-	Serial.print(F("Roll = "));
-	Serial.println(roll * RAD_2_DEG, DEC);
-	Serial.println();
+	Debug::Print("Orientation:\n");
+	Debug::Print("Yaw = %.4f\n",		yaw * RAD_2_DEG);
+	Debug::Print("Pitch = %.4f\n",		pitch * RAD_2_DEG);
+	Debug::Print("Roll = %.4f\n",		roll * RAD_2_DEG);
 }
