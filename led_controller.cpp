@@ -14,7 +14,7 @@ void LedController::Setup()
 {
 	output.begin();
  
-	output.setBrightness(20);   
+	output.setBrightness(255);   
 	output.show();
 	
 }

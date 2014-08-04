@@ -9,6 +9,7 @@ class Config
 public:
 	class Pins
 	{
+	public:
 		enum Pin
 		{
 			LED_CONTROLLER	= 23,

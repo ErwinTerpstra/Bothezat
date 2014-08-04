@@ -23,12 +23,11 @@ struct Vector3
 	{
 		float length = Length();
 
-		if (length > 0.0)
-		{
-			x /= length;
-			y /= length;
-			z /= length;
-		}
+		assert(length > 0.0f && "Zero vector can't be normalized!");
+
+		x /= length;
+		y /= length;
+		z /= length;
 	}
 
 	Vector3 Normalized()
@@ -84,6 +83,18 @@ struct Vector3
 		return Vector3(-x, -y, -z);
 	}
 
+	bool IsValid() const
+	{
+		return !(isnan(x) || isnan(y) || isnan(z));
+	}
+
+	void Print(uint8_t precision = 2) const
+	{
+		char format[64];
+		sprintf(format, "%%.%df;%%.%df;%%.%df;\n", precision, precision, precision);
+		Debug::Print(format, x, y, z);
+	}
+
 	static float Dot(const Vector3& a, const Vector3& b)
 	{
 		return a.x * b.x + a.y * b.y + a.z * b.z;
@@ -97,33 +108,35 @@ struct Vector3
 		return result;
 	}
 	
-	static void Cross(Vector3& out, const Vector3& a, const Vector3& b)
+	static Vector3& Cross(Vector3& out, const Vector3& a, const Vector3& b)
 	{
 		out.x = a.y * b.z - a.z * b.y;
 		out.y = a.x * b.z - a.z * b.x;
 		out.z = a.x * b.y - a.y * b.x;
+
+		return out;
 	}
 
 	static Vector3 Forward() { return Vector3(0.0f, 1.0f, 0.0f); }
-	static Vector3 Up() { return Vector3(0.0f, 0.0f, 1.0f); }
+	static Vector3 Up() { return Vector3(0.0f, 0.0f, -1.0f); }
 	static Vector3 Right() { return Vector3(1.0f, 0.0f, 0.0f); }
 };
 
 	
 // Binary operators
-Vector3 operator+(const Vector3& lhs, const Vector3& rhs)
+__inline Vector3 operator+(const Vector3& lhs, const Vector3& rhs)
 {
 	Vector3 result = lhs;
 	return result += rhs;
 }
 
-Vector3 operator-(const Vector3& lhs, const Vector3& rhs)
+__inline Vector3 operator-(const Vector3& lhs, const Vector3& rhs)
 {
 	Vector3 result = lhs;
 	return result -= rhs;
 }
 
-Vector3 operator*(const Vector3& lhs, const float& rhs)
+__inline Vector3 operator*(const Vector3& lhs, const float& rhs)
 {
 	Vector3 result = lhs;
 	return result *= rhs;

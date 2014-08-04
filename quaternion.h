@@ -114,9 +114,68 @@ struct Quaternion
 	    return *this;
 	}
 
+	Quaternion operator+(const Quaternion& rhs) const
+	{
+		Quaternion result = *this;
+		result.x += rhs.x;
+		result.y += rhs.y;
+		result.z += rhs.z;
+		result.w += rhs.w;
+
+		return result;
+	}
+
+	Quaternion operator*(const Quaternion& rhs) const
+	{
+		Quaternion result = *this;
+		result.Multiply(rhs);
+
+		return result;
+	}
+
+	Vector3 operator*(const Vector3& rhs) const
+	{
+		Vector3 v(x, y, z);
+		Vector3 t = Vector3::Cross(v, rhs) * 2.0f;
+		return rhs + t * w + Vector3::Cross(v, t);
+	}
+
+	Quaternion operator*(const float& rhs) const
+	{
+		Quaternion result = *this;
+		result.x *= rhs;
+		result.y *= rhs;
+		result.z *= rhs;
+		result.w *= rhs;
+		return result;
+	}
+
+	Quaternion operator-() const
+	{
+		return Quaternion(-x, -y, -z, -w);
+	}
+
+	bool IsValid() const
+	{
+		return !(isnan(x) || isnan(y) || isnan(z) || isnan(w));
+	}
+
+	void Print() const
+	{
+		Debug::Print("%.4f;%.4f;%.4f;%.4f\n", x, y, z, w);
+	}
+
 	static float Dot(const Quaternion& q1, const Quaternion& q2) 
 	{
 		return q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w;
+	}
+
+	static Quaternion AngleAxis(float angle, const Vector3& axis) 
+	{
+		Quaternion result;
+		AngleAxis(angle, axis);
+
+		return result;
 	}
 
 	static Quaternion& AngleAxis(Quaternion& out, float angle, const Vector3& axis) 
@@ -134,12 +193,28 @@ struct Quaternion
 		return out;
 	}
 
+	static Quaternion Lerp(const Quaternion& lhs, const Quaternion& rhs, float t) 
+	{
+		Quaternion result;
+		Lerp(result, lhs, rhs, t);
+
+		return result;
+	}
+
 	static Quaternion& Lerp(Quaternion& out, const Quaternion &lhs, const Quaternion& rhs, float t) 
 	{ 
 		out = lhs * (1.0f - t) + (rhs * t);
 		out.Normalize();
 
 		return out;
+	}
+
+	static Quaternion& Slerp(const Quaternion& q1, const Quaternion& q2, float t)
+	{
+		Quaternion result;
+		Slerp(result, q1, q2, t);
+
+		return result;
 	}
 
 	static Quaternion& Slerp(Quaternion& out, const Quaternion& q1, const Quaternion& q2, float t) 
@@ -169,6 +244,36 @@ struct Quaternion
 		return out;
 	}
 
+	static Quaternion LookAt(const Vector3& forward, const Vector3& up)
+	{
+		Quaternion result;
+		LookAt(result, forward, up);
+
+		return result;
+	}
+
+	static Quaternion& LookAt(Quaternion& out, const Vector3& forward, const Vector3& up)
+	{
+		Vector3 right = Vector3::Cross(forward, up);
+
+		out.w = sqrt(1.0f + right.x + up.y + forward.z) * 0.5f;
+		float recipW4 = 1.0f / (4.0f * out.w);
+
+		out.x = (forward.y - up.z) * recipW4;
+		out.y = (right.z - forward.x) * recipW4;
+		out.z = (up.x - right.y) * recipW4;
+
+		return out;
+	}
+
+	static Quaternion RotationBetween(const Vector3& u, const Vector3& v)
+	{
+		Quaternion result;
+		RotationBetween(result, u, v);
+
+		return result;
+	}
+
 	static Quaternion& RotationBetween(Quaternion& out, const Vector3& u, const Vector3& v)
 	{
 	    float magnitude = sqrt(u.LengthSq() * v.LengthSq());
@@ -184,43 +289,6 @@ struct Quaternion
 	}
 
 };
-
-Quaternion operator+(const Quaternion& lhs, const Quaternion& rhs)
-{
-	Quaternion result = lhs;
-	result.x += rhs.x;
-	result.y += rhs.y;
-	result.z += rhs.z;
-	result.w += rhs.w;
-
-	return result;
-}
-
-Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs)
-{
-	Quaternion result = lhs;
-	result.Multiply(rhs);
-
-	return result;
-}
-
-Vector3 operator*(const Quaternion& lhs, const Vector3& rhs)
-{
-	Vector3 v(x, y, z);
-	Vector3 t = 2.0f * Vector3::Cross(v, rhs);
-	return rhs + lhs.w * t + Vector3::Cross(v, t);
-}
-
-Quaternion operator*(const Quaternion& lhs, const float& rhs)
-{
-	Quaternion result = lhs;
-	result.x *= rhs;
-	result.y *= rhs;
-	result.z *= rhs;
-	result.w *= rhs;
-	return result;
-}
-
 
 }
 

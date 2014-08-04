@@ -9,7 +9,7 @@
 
 using namespace bothezat;
 
-MotionSensor::MotionSensor() : orientation(), yaw(0.0f), pitch(0.0f), roll(0.0f)
+MotionSensor::MotionSensor() : orientation()
 {
 	
 }
@@ -27,10 +27,9 @@ void MotionSensor::Loop(uint32_t dt)
 	float scale = gyroScale * deltaSeconds * DEG_2_RAD;
 
 	// Convert axis rotations to quaternions
-	Quaternion yaw, pitch, roll;
-	Quaternion::AngleAxis(yaw,		mpuData.gyroZ * scale, Vector3::Up());
-	Quaternion::AngleAxis(pitch,	mpuData.gyroX * scale, Vector3::Right());
-	Quaternion::AngleAxis(roll,		mpuData.gyroY * scale, Vector3::Forward());
+	Quaternion yaw 		= Quaternion::AngleAxis(yaw,	mpuData.gyroZ * scale, Vector3::Up());
+	Quaternion pitch 	= Quaternion::AngleAxis(pitch,	mpuData.gyroX * scale, Vector3::Right());
+	Quaternion roll 	= Quaternion::AngleAxis(roll,	mpuData.gyroY * scale, Vector3::Forward());
 
 	// Apply relative rotations to saved orientation
 	Quaternion rotation = yaw * pitch * roll;
@@ -41,17 +40,26 @@ void MotionSensor::Loop(uint32_t dt)
 	acceleration.y = mpuData.accelY * accelScale;
 	acceleration.z = mpuData.accelZ * accelScale;
 
-	// Only use accelerometer values if total acceleration is below threhold
+	// Only use accelerometer values if total acceleration is below threshold
 	float magnitude = acceleration.Length();
 	if (magnitude < Config::MS_ACCEL_MAX)
 	{
-		Vector3 up = -acceleration.Normalized();
-		
 		Vector3 forward = orientation * Vector3::Forward();
+		Vector3 up = -acceleration;
+
+		forward.Normalize();
+		up.Normalize();
+
 		Vector3 right = Vector3::Cross(forward, up);
 		forward = Vector3::Cross(up, right);
 
+		Quaternion accelOrientation = Quaternion::LookAt(forward, up);
+
+		orientation = accelOrientation;
+		//Quaternion::Slerp(orientation, orientation, accelOrientation, deltaSeconds);
 	}
+	else
+		Debug::Print("Dropping accel values\n");
 }
 
 void MotionSensor::SetupMPU()
@@ -104,4 +112,7 @@ void MotionSensor::PrintOrientation()
 	Debug::Print("Yaw = %.4f\n",		yaw * RAD_2_DEG);
 	Debug::Print("Pitch = %.4f\n",		pitch * RAD_2_DEG);
 	Debug::Print("Roll = %.4f\n",		roll * RAD_2_DEG);
+	Debug::Print("\n");
+
+	Debug::Print("Acceleration: %.4f;%.4f;%.4f;\n",	acceleration.x, acceleration.y, acceleration.z);
 }

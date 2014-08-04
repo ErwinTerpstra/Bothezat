@@ -26,7 +26,7 @@ public:
 	virtual void Setup() { }
 	virtual void Loop(uint32_t dt) { }
 
-	void Print(const char *msg, va_list args)
+	void Print(const char* msg, va_list args)
 	{
 		vsprintf(buffer, msg, args);
 
@@ -34,7 +34,7 @@ public:
 	}
 
 public:
-	static void Print(const char *msg, ...)
+	static void Print(const char* msg, ...)
 	{
 		va_list args;
 		va_start(args, msg);
@@ -43,10 +43,25 @@ public:
 		va_end(args);
 	}
 
+	static bool AssertHandler(const char* code, const char* file, const uint32_t line)
+	{
+		Print("Assert failed!\n%s at %s:%d\n", code, file, line);
+		return true;
+	}
 
-
+	static bool Halt()
+	{
+		while(1);
+		return true;
+	}
 	
+	static bool Approximately(float a, float b, float epsilon = 0.00001f)
+	{
+		return fabs(a - b) <= epsilon;
+	}
 };
+
+#define assert(x) ((void)(!(x) && Debug::AssertHandler(#x, __FILE__, __LINE__) && Debug::Halt()))
 
 }
 

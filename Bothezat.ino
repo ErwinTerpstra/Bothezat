@@ -22,7 +22,7 @@ MotorController& motorController = MotorController::Instance();
 Timer timer(TC0, 0);
 uint32_t dt, debugTime;
 uint64_t loopStart, lastLoopStart, loopEnd;
-const uint16_t loopTime = 0;
+const uint16_t loopTime = 5;
 
 void setup()
 {
@@ -68,7 +68,7 @@ void loop()
 
 	motionSensor.Loop(dt);
 	//receiver.Loop(dt);
-	//ledController.Loop(dt);
+	ledController.Loop(dt);
 	motorController.Loop(dt);
 
 	debugTime += dt;
