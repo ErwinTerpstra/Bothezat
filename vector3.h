@@ -38,7 +38,7 @@ struct Vector3
 		return result;
 	}
 
-	float LengthSq() const { return x * x + y * y + z * z; }
+	__inline float LengthSq() const { return x * x + y * y + z * z; }
 	float Length() const { return sqrt(LengthSq()); }
 
 	Vector3& operator=(const Vector3& other)
@@ -76,6 +76,8 @@ struct Vector3
 		x *= rhs;
 		y *= rhs;
 		z *= rhs;
+
+		return *this;
 	}
 	
 	Vector3 operator-() const
@@ -95,6 +97,11 @@ struct Vector3
 		Debug::Print(format, x, y, z);
 	}
 
+	static float Angle(const Vector3& a, const Vector3& b)
+	{
+		return acos(Dot(a, b));
+	}
+
 	static float Dot(const Vector3& a, const Vector3& b)
 	{
 		return a.x * b.x + a.y * b.y + a.z * b.z;
@@ -111,14 +118,14 @@ struct Vector3
 	static Vector3& Cross(Vector3& out, const Vector3& a, const Vector3& b)
 	{
 		out.x = a.y * b.z - a.z * b.y;
-		out.y = a.x * b.z - a.z * b.x;
-		out.z = a.x * b.y - a.y * b.x;
+		out.y = a.z * b.x - a.x * b.z;
+		out.z = a.x * b.y - a.y * b.x; 
 
 		return out;
 	}
 
-	static Vector3 Forward() { return Vector3(0.0f, 1.0f, 0.0f); }
-	static Vector3 Up() { return Vector3(0.0f, 0.0f, -1.0f); }
+	static Vector3 Forward() { return Vector3(0.0f, 0.0f, -1.0f); }
+	static Vector3 Up() { return Vector3(0.0f, 1.0f, 0.0f); }
 	static Vector3 Right() { return Vector3(1.0f, 0.0f, 0.0f); }
 };
 
@@ -141,6 +148,13 @@ __inline Vector3 operator*(const Vector3& lhs, const float& rhs)
 	Vector3 result = lhs;
 	return result *= rhs;
 }
+
+// Inversed binary operators
+__inline Vector3 operator*(const float& lhs, const Vector3& rhs)
+{
+	return rhs * lhs;
+}
+
 
 }
 

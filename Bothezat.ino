@@ -22,7 +22,7 @@ MotorController& motorController = MotorController::Instance();
 Timer timer(TC0, 0);
 uint32_t dt, debugTime;
 uint64_t loopStart, lastLoopStart, loopEnd;
-const uint16_t loopTime = 5;
+const uint32_t loopTime = 0;
 
 void setup()
 {
@@ -36,7 +36,7 @@ void setup()
 
 	motionSensor.Setup();
 	receiver.Setup();
-	ledController.Setup();
+	//ledController.Setup();
 	motorController.Setup();
 
 	uint16_t precision = timer.SetPrecision(2);
@@ -56,7 +56,7 @@ void loop()
 	loopStart = timer.Micros();
 
 	// Overflow, don't update deltatime
-	if (lastLoopStart < loopStart)
+	if (lastLoopStart <= loopStart)
 	{
 		dt = loopStart - lastLoopStart;
 		lastLoopStart = loopStart;
@@ -68,12 +68,12 @@ void loop()
 
 	motionSensor.Loop(dt);
 	//receiver.Loop(dt);
-	ledController.Loop(dt);
+	//ledController.Loop(dt);
 	motorController.Loop(dt);
 
 	debugTime += dt;
 
-	if (debugTime >= 1000000L)
+	if (debugTime >= 500000L)
 	{
 		motionSensor.PrintOrientation();
 		receiver.PrintChannels();
@@ -83,5 +83,5 @@ void loop()
 
 	loopEnd = timer.Micros();
 
-	delay(constrain(loopTime - ((loopEnd - loopStart) / 1000), 0, loopTime));
+	delayMicroseconds(constrain(loopTime - (loopEnd - loopStart), 0, loopTime));
 }

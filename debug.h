@@ -54,11 +54,6 @@ public:
 		while(1);
 		return true;
 	}
-	
-	static bool Approximately(float a, float b, float epsilon = 0.00001f)
-	{
-		return fabs(a - b) <= epsilon;
-	}
 };
 
 #define assert(x) ((void)(!(x) && Debug::AssertHandler(#x, __FILE__, __LINE__) && Debug::Halt()))

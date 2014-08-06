@@ -34,18 +34,25 @@ struct Quaternion
 
 	void Multiply(const Quaternion& other)
 	{
+		/*
 	    float w2 = w * other.w - (x * other.x + y * other.y + z * other.z);
 
 	    float x2 = w * other.x + other.w * x + y * other.z - z * other.y;
 	    float y2 = w * other.y + other.w * y + z * other.x - x * other.z;
 	    float z2 = w * other.z + other.w * z + x * other.y - y * other.x;
+		/*/
+	    const Quaternion& q1 = *this;
+	    const Quaternion& q2 = other;
+	    float x2 =  q1.x * q2.w + q1.y * q2.z - q1.z * q2.y + q1.w * q2.x;
+	    float y2 = -q1.x * q2.z + q1.y * q2.w + q1.z * q2.x + q1.w * q2.y;
+	    float z2 =  q1.x * q2.y - q1.y * q2.x + q1.z * q2.w + q1.w * q2.z;
+	    float w2 = -q1.x * q2.x - q1.y * q2.y - q1.z * q2.z + q1.w * q2.w;
+	    //*/
 
 	    w = w2;
 	    x = x2;
 	    y = y2;
 	    z = z2;
-
-	    Normalize();
   	}
 
   	void Identity()
@@ -75,29 +82,40 @@ struct Quaternion
 	    float x2 = x * x;
 	    float y2 = y * y;
 	    float z2 = z * z;
-	    float unitLength = w2 + x2 + y2 + z2;    // Normalised == 1, otherwise correction divisor.
-	    float abcd = w * x + y * z;
+	    
 
-	    if (abcd > (0.5 - FLT_EPSILON) * unitLength)
+
+	    //float abcd = x * y + z * w; // euclideanspace.com
+	    //float abcd = y * w - x * z; // Wikipedia
+	    float abcd = y * z + w * x;
+
+	    if (Util::Approximately(abcd, 0.5f))
 	    {
-	        yaw = 2 * atan2(y, w);
-	        pitch = PI;
+	        yaw = 2 * atan2(x, w);
+	        pitch = PI_HALF;
 	        roll = 0;
 	    }
-	    else if (abcd < (-0.5 + FLT_EPSILON) * unitLength)
+	    else if (Util::Approximately(abcd, -0.5f))
 	    {
-	        yaw = -2 * atan2(y, w);
-	        pitch = -PI;
+	        yaw = -2 * atan2(x, w);
+	        pitch = -PI_HALF;
 	        roll = 0;
 	    }
 	    else
 	    {
-	        float adbc = w * z - x * y;
-	        float acbd = w * y - x * z;
+			// euclideanspace.com
+            //yaw = atan2(2 * w * y - 2 * x * z, 1 - 2 * (z2 + y2));
+            //pitch = asin(2 * abcd);
+            //roll = atan2(2 * w * x - 2 * y * z, 1 - 2 * (x2 + z2));	    	
 
-	        yaw = atan2(2 * adbc, 1 - 2 * (z2 + x2));
-	        pitch = asin(2 * abcd / unitLength);
-	        roll = atan2(2 * acbd, 1 - 2 * (y2 + x2));
+            // Wikipedia
+            //yaw = atan2(2 * (w * y + x * z), 1 - 2 * (x2 + y2));
+            //pitch = asin(2 * abcd);
+            //roll = atan2(2 * (w * z + x * y), 1 - 2 * (y2 + z2));
+
+            yaw = atan2(x * z + w * y, 0.5f - (x2 + y2));
+            pitch = asin(-2 * abcd);
+            roll = atan2(x * y + w * z, 0.5f - (y2 + z2));
 	    }
 	}
 
@@ -121,6 +139,17 @@ struct Quaternion
 		result.y += rhs.y;
 		result.z += rhs.z;
 		result.w += rhs.w;
+
+		return result;
+	}
+
+	Quaternion operator-(const Quaternion& rhs) const
+	{
+		Quaternion result = *this;
+		result.x -= rhs.x;
+		result.y -= rhs.y;
+		result.z -= rhs.z;
+		result.w -= rhs.w;
 
 		return result;
 	}
@@ -180,13 +209,13 @@ struct Quaternion
 
 	static Quaternion& AngleAxis(Quaternion& out, float angle, const Vector3& axis) 
 	{
-		float omega = -0.5f * angle;
+		float omega = 0.5f * angle;
 		float s = sin(omega);
 
 		out.x = s * axis.x;
 		out.y = s * axis.y;
 		out.z = s * axis.z;
-		out.w = (float) cos(omega);
+		out.w = cos(omega);
 
 		out.Normalize();
 
@@ -232,11 +261,16 @@ struct Quaternion
 		} else 
 			q3 = q2;
 		
-		if (dot < 1.0f - FLT_EPSILON)
+		if (dot < 0.9995f)
 		{
 			float angle = acos(dot);
+			float theta = angle * t;
 
-			out = (q1 * sin(angle * (1.0 - t)) + q3 * sin(angle * t)) * (1.0f / sin(angle));
+		    q3 = q3 - q1 * dot;
+		    q3.Normalize();
+
+		    out = q1 * cos(theta) + q3 * sin(theta);
+		    out.Normalize();
 		}
 		else
 			Lerp(out, q1, q3, t);
@@ -254,14 +288,55 @@ struct Quaternion
 
 	static Quaternion& LookAt(Quaternion& out, const Vector3& forward, const Vector3& up)
 	{
+		// right.x 		up.x 	forward.x
+		// right.y 		up.y 	forward.y
+		// right.z 		up.z 	forward.z
 		Vector3 right = Vector3::Cross(forward, up);
 
-		out.w = sqrt(1.0f + right.x + up.y + forward.z) * 0.5f;
-		float recipW4 = 1.0f / (4.0f * out.w);
+		float m00 = right.x, m01 = right.y, m02 = right.z,
+			  m10 = up.x, m11 = up.y, m12 = up.z,
+			  m20 = forward.x, m21 = forward.y, m22 = forward.z;
 
-		out.x = (forward.y - up.z) * recipW4;
-		out.y = (right.z - forward.x) * recipW4;
-		out.z = (up.x - right.y) * recipW4;
+		float tr = right.x + up.y + forward.z;
+
+		if (tr > 0) 
+		{	
+			out.w = sqrt(1.0f + tr) * 0.5f;
+			float recipW = 1.0f / (4.0f * out.w);
+
+			out.x = (m21 - m12) * recipW;
+			out.y = (m02 - m20) * recipW; 
+			out.z = (m10 - m01) * recipW; 
+		}
+		else if ((m00 > m11) && (m00 > m22))
+		{ 
+			out.x = sqrt(1.0f + m00 - m11 - m22) * 0.5f;
+			float recipX = 1.0f / (4.0f * out.x);
+
+			out.w = (m21 - m12) * recipX;
+			out.y = (m01 + m10) * recipX; 
+			out.z = (m02 + m20) * recipX; 
+		}
+		else if (m11 > m22) 
+		{
+			out.y = sqrt(1.0f + m11 - m00 - m22) * 0.5f; 
+			float recipY = 1.0f / (4.0f * out.y);
+
+			out.w = (m02 - m20) * recipY;
+			out.x = (m01 + m10) * recipY; 
+			out.z = (m12 + m21) * recipY; 
+		}
+		else
+		{ 
+			out.z = sqrt(1.0f + m22 - m00 - m11) * 0.5f; 
+			float recipZ = 1.0f / (4.0f * out.z);
+
+			out.w = (m10 - m01) * recipZ;
+			out.x = (m02 + m20) * recipZ;
+			out.y = (m12 + m21) * recipZ;
+		}
+
+		out.Normalize();
 
 		return out;
 	}

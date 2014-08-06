@@ -21,6 +21,12 @@ public:
 		*a = *b;
 		*b = tmp;
 	}
+	
+	static bool Approximately(float a, float b, float epsilon = FLT_EPSILON)
+	{
+		return fabs(a - b) <= epsilon;
+	}
+
 
 };
 }
