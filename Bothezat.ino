@@ -19,7 +19,8 @@ PwmReceiver& receiver = PwmReceiver::Instance();
 LedController& ledController = LedController::Instance();
 MotorController& motorController = MotorController::Instance();
 
-Timer timer(TC0, 0);
+Timer* timer = NULL;
+
 uint32_t dt, debugTime;
 uint64_t loopStart, lastLoopStart, loopEnd;
 const uint32_t loopTime = 0;
@@ -31,6 +32,7 @@ void setup()
 	Serial.println("Initializing...");
 
 	Timer::EnableTimers();
+	timer = Timer::GetFreeTimer();
 
 	I2C::Setup();
 
@@ -39,21 +41,21 @@ void setup()
 	//ledController.Setup();
 	motorController.Setup();
 
-	uint16_t precision = timer.SetPrecision(2);
+	uint16_t precision = timer->SetPrecision(2);
 	Debug::Print("Timer set to %d us precision\n", precision);
 
-	timer.Start();
+	timer->Start();
 
 	dt = 10;
 	debugTime = 0;
-	loopStart = lastLoopStart = timer.Micros();
+	loopStart = lastLoopStart = timer->Micros();
 
 	Serial.println("Initialization complete!");
 }
 
 void loop()
 {
-	loopStart = timer.Micros();
+	loopStart = timer->Micros();
 
 	// Overflow, don't update deltatime
 	if (lastLoopStart <= loopStart)
@@ -67,7 +69,7 @@ void loop()
 	}
 
 	motionSensor.Loop(dt);
-	//receiver.Loop(dt);
+	receiver.Loop(dt);
 	//ledController.Loop(dt);
 	motorController.Loop(dt);
 
@@ -77,11 +79,12 @@ void loop()
 	{
 		motionSensor.PrintOrientation();
 		receiver.PrintChannels();
-		Serial.println(dt);
+		Debug::Print("Last loop time: %dus\n", dt);
+		
 		debugTime = 0;
 	}
 
-	loopEnd = timer.Micros();
+	loopEnd = timer->Micros();
 
 	delayMicroseconds(constrain(loopTime - (loopEnd - loopStart), 0, loopTime));
 }

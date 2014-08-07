@@ -17,7 +17,7 @@ class Receiver : public Module<Derived>
 public:
 	enum Channel
 	{
-		// Default channel order
+		// All available RC channels, if more should be read the need to be added below
 		AILERON,
 		ELEVATOR,
 		THROTTLE,
@@ -28,7 +28,7 @@ public:
 		MAX_CHANNELS,
 
 		// Generalization of default order
-		// Makes it easier to change the default order
+		// Makes it easier to change the order
 		CHANNEL1 = AILERON,
 		CHANNEL2 = ELEVATOR,
 		CHANNEL3 = THROTTLE,

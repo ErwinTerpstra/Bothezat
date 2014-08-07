@@ -42,6 +42,8 @@ private:
 	void SetupMPU();
 	void ReadMPU();
 
+	const Quaternion& CurrentOrientation() const { return orientation; }
+
 	__inline void ConvertVector(Vector3& v)
 	{
 		float tmp = v.y;

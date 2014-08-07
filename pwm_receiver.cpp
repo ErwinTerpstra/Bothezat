@@ -6,7 +6,7 @@
 
 using namespace bothezat;
 
-PwmReceiver::PwmReceiver() : Receiver(), timer(TC1, 0)
+PwmReceiver::PwmReceiver() : Receiver(), timer(NULL)
 {
 	// Mapping for Spektrum receivers
 	mapping[Receiver::CHANNEL1] = Receiver::THROTTLE;
@@ -23,8 +23,9 @@ void PwmReceiver::Setup()
 	for (uint8_t channel = 0; channel < Config::RX_PWM_AMOUNT; ++channel)
 		pinMode(Config::Pins::RX_PWM + channel, INPUT);
 
-	// Set precision to at least 2 us
-	timer.SetPrecision(2);
+	// Create a timer with a precision of at least 2 us
+	timer = Timer::GetFreeTimer();
+	timer->SetPrecision(2);
 }
 
 void PwmReceiver::Loop(uint32_t dt)
@@ -41,7 +42,6 @@ void PwmReceiver::Loop(uint32_t dt)
 	// Disable interrupts to get accurate timing
 	noInterrupts();
 
-	timer.Configure(TC_CMR_TCCLKS_TIMER_CLOCK3);
 	uint8_t channel = 0;
 
 	// Wait for all pins to be low
@@ -59,13 +59,15 @@ void PwmReceiver::Loop(uint32_t dt)
 	// Read until a pulse has been measured for all pins
 	do
 	{	
+		uint32_t start;
+
 		// Find the first pin with a pulse
 		for (channel = 0; channel < Config::RX_PWM_AMOUNT; ++channel)
 		{
 			if (digitalRead(Config::Pins::RX_PWM + channel) == HIGH)
 			{
 				// Start the timer here to minimize error
-				timer.Start();
+				timer->Start();
 				break;
 			}
 		}
@@ -78,11 +80,11 @@ void PwmReceiver::Loop(uint32_t dt)
 		while (digitalRead(Config::Pins::RX_PWM + channel) == HIGH);
 
 		// Pulse is low again, save the timer value 
-		channels[channel] = timer.Micros();//ReadValue();
+		channels[channel] = timer->Micros();
 		--channelsReading;
 
 		// Stop the timer
-		timer.Stop();
+		timer->Stop();
 	} while (channelsReading > 0);
 
 	// Re-enable interrupts

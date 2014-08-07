@@ -17,7 +17,7 @@ friend class Module<PwmReceiver>;
 
 
 private:
-	Timer timer;
+	Timer* timer;
 
 protected:
 	PwmReceiver();

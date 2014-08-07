@@ -42,7 +42,13 @@ struct Config
 	/*
 	 * Motor controller
 	 */
-	static const uint8_t MC_MOTOR_AMOUNT = 4;
+	static const uint8_t MC_MOTOR_AMOUNT = 1;
+
+	static const uint32_t MC_PWM_FREQUENCY = 488;
+
+	static const uint16_t MC_PWM_MIN_COMMAND = 950;
+
+	static const uint16_t MC_PWM_MAX_COMMAND = 2050;
 
 };
 

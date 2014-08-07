@@ -31,7 +31,14 @@ public:
 	virtual void Setup();
 
 	virtual void Loop(uint32_t dt);
-	
+
+private:
+	void WriteMotor(const Motor& motor, uint16_t commmand);
+
+	void EnablePWM();
+	void EnablePin(uint8_t pin);
+	void WritePwm(uint8_t pin, uint16_t dutyCycle);
+
 };
 
 }
