@@ -83,22 +83,20 @@ struct Quaternion
 	    float y2 = y * y;
 	    float z2 = z * z;
 	    
-
-
 	    //float abcd = x * y + z * w; // euclideanspace.com
 	    //float abcd = y * w - x * z; // Wikipedia
 	    float abcd = y * z + w * x;
 
-	    if (Util::Approximately(abcd, 0.5f))
+	    if (Util::Approximately(abcd, 0.5f, 0.0005f))
 	    {
 	        yaw = 2 * atan2(x, w);
-	        pitch = PI_HALF;
+	        pitch = -PI_HALF;
 	        roll = 0;
 	    }
-	    else if (Util::Approximately(abcd, -0.5f))
+	    else if (Util::Approximately(abcd, -0.5f, 0.0005f))
 	    {
 	        yaw = -2 * atan2(x, w);
-	        pitch = -PI_HALF;
+	        pitch = PI_HALF;
 	        roll = 0;
 	    }
 	    else
@@ -288,55 +286,58 @@ struct Quaternion
 
 	static Quaternion& LookAt(Quaternion& out, const Vector3& forward, const Vector3& up)
 	{
-		// right.x 		up.x 	forward.x
-		// right.y 		up.y 	forward.y
-		// right.z 		up.z 	forward.z
 		Vector3 right = Vector3::Cross(forward, up);
 
 		float m00 = right.x, m01 = right.y, m02 = right.z,
 			  m10 = up.x, m11 = up.y, m12 = up.z,
 			  m20 = forward.x, m21 = forward.y, m22 = forward.z;
 
-		float tr = right.x + up.y + forward.z;
+		out.w = sqrt(1.0f + m00 + m11 + m22) * 0.5f;
+		out.x = Util::CopySign(sqrt(max(0, 1.0f + m00 - m11 - m22)) * 0.5f, m21 - m12);
+		out.y = Util::CopySign(sqrt(max(0, 1.0f - m00 + m11 - m22)) * 0.5f, m02 - m20);
+		out.z = Util::CopySign(sqrt(max(0, 1.0f - m00 - m11 + m22)) * 0.5f, m10 - m01);
 
-		if (tr > 0) 
+		/*
+		if (m00 + m11 + m22 > -1.0f) 
 		{	
-			out.w = sqrt(1.0f + tr) * 0.5f;
+			out.w = sqrt(m00 + m11 + m22 + 1.0f) * 0.5f;
 			float recipW = 1.0f / (4.0f * out.w);
 
-			out.x = (m21 - m12) * recipW;
-			out.y = (m02 - m20) * recipW; 
-			out.z = (m10 - m01) * recipW; 
+			out.x = (m12 - m21) * recipW;
+			out.y = (m20 - m02) * recipW; 
+			out.z = (m01 - m10) * recipW; 
 		}
 		else if ((m00 > m11) && (m00 > m22))
 		{ 
-			out.x = sqrt(1.0f + m00 - m11 - m22) * 0.5f;
+			out.x = sqrt(m00 - m11 - m22 + 1.0f) * 0.5f;
 			float recipX = 1.0f / (4.0f * out.x);
 
-			out.w = (m21 - m12) * recipX;
+			out.w = (m12 - m21) * recipX;
 			out.y = (m01 + m10) * recipX; 
-			out.z = (m02 + m20) * recipX; 
+			out.z = (m20 + m02) * recipX; 
 		}
 		else if (m11 > m22) 
 		{
-			out.y = sqrt(1.0f + m11 - m00 - m22) * 0.5f; 
+			out.y = sqrt(-m00 + m11 - m22 + 1.0f) * 0.5f; 
 			float recipY = 1.0f / (4.0f * out.y);
 
-			out.w = (m02 - m20) * recipY;
+			out.w = (m20 - m02) * recipY;
 			out.x = (m01 + m10) * recipY; 
 			out.z = (m12 + m21) * recipY; 
 		}
 		else
 		{ 
-			out.z = sqrt(1.0f + m22 - m00 - m11) * 0.5f; 
+			out.z = sqrt(-m00 - m11 + m22 + 1.0f) * 0.5f; 
 			float recipZ = 1.0f / (4.0f * out.z);
 
-			out.w = (m10 - m01) * recipZ;
-			out.x = (m02 + m20) * recipZ;
+			out.w = (m01 - m10) * recipZ;
+			out.x = (m20 + m02) * recipZ;
 			out.y = (m12 + m21) * recipZ;
 		}
+		*/
 
 		out.Normalize();
+		out.Print();
 
 		return out;
 	}
@@ -350,6 +351,22 @@ struct Quaternion
 	}
 
 	static Quaternion& RotationBetween(Quaternion& out, const Vector3& u, const Vector3& v)
+	{
+		Vector3 half = u + v;
+		half.Normalize();
+
+		Vector3 w = Vector3::Cross(u, half);
+
+		out.w = Vector3::Dot(u, half);
+		out.x = w.x;
+		out.y = w.y;
+		out.z = w.z;
+	    out.Normalize();
+
+		return out;
+	}
+
+	static Quaternion& RotationBetweenA(Quaternion& out, const Vector3& u, const Vector3& v)
 	{
 	    float magnitude = sqrt(u.LengthSq() * v.LengthSq());
 	    Vector3 w = Vector3::Cross(u, v);

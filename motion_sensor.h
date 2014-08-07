@@ -47,7 +47,7 @@ private:
 		float tmp = v.y;
 
 		v.y = -v.z;
-		v.z = -tmp;
+		v.z = tmp;
 	}
 
 	void ReadAcceleration(Vector3& acceleration)

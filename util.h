@@ -27,6 +27,16 @@ public:
 		return fabs(a - b) <= epsilon;
 	}
 
+	static float Sign(float x)
+	{
+		return x == 0.0f ? 0.0f : (x > 0.0f ? 1.0f : -1.0f);
+	}
+
+	static float CopySign(float a, float b)
+	{
+		return fabs(a) * Sign(b);
+	}
+
 
 };
 }

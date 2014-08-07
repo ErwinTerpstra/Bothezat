@@ -25,9 +25,10 @@ struct Vector3
 
 		assert(length > 0.0f && "Zero vector can't be normalized!");
 
-		x /= length;
-		y /= length;
-		z /= length;
+		float recipLength = 1.0f / length;
+		x *= recipLength;
+		y *= recipLength;
+		z *= recipLength;
 	}
 
 	Vector3 Normalized()
@@ -124,7 +125,7 @@ struct Vector3
 		return out;
 	}
 
-	static Vector3 Forward() { return Vector3(0.0f, 0.0f, -1.0f); }
+	static Vector3 Forward() { return Vector3(0.0f, 0.0f, 1.0f); }
 	static Vector3 Up() { return Vector3(0.0f, 1.0f, 0.0f); }
 	static Vector3 Right() { return Vector3(1.0f, 0.0f, 0.0f); }
 };

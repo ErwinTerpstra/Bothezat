@@ -50,7 +50,7 @@ void MotionSensor::Loop(uint32_t dt)
 	float magnitude = acceleration.Length();
 	if (fabs(1.0f - magnitude) < Config::MS_ACCEL_MAX)
 	{
-		Vector3 forward = Vector3::Forward();//orientation * Vector3::Forward();
+		Vector3 forward = orientation * Vector3::Forward();
 		Vector3 up = -acceleration;
 
 		// Normalize axis vectors
@@ -64,9 +64,9 @@ void MotionSensor::Loop(uint32_t dt)
 			Vector3 right = Vector3::Cross(forward, up);
 			forward = Vector3::Cross(up, right);
 
-			Quaternion::LookAt(accelOrientation, forward, up);
+			Quaternion::RotationBetween(accelOrientation, up, Vector3::Up());
 
-			//Quaternion::Lerp(orientation, orientation, accelOrientation, Config::MS_ACCEL_CORRECTION_RC / (Config::MS_ACCEL_CORRECTION_RC + deltaSeconds));
+			Quaternion::Slerp(orientation, orientation, accelOrientation, Config::MS_ACCEL_CORRECTION_RC / (Config::MS_ACCEL_CORRECTION_RC + deltaSeconds));
 		}
 	}
 }
