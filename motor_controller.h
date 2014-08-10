@@ -22,7 +22,7 @@ public:
 		Vector3 weights;
 	};
 
-	Motor motors[Config::MC_MOTOR_AMOUNT];
+	Motor motors[Config::Constants::MC_MOTOR_AMOUNT];
 
 protected:
 	MotorController();

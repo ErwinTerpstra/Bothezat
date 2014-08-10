@@ -47,7 +47,7 @@ void MotorController::Setup()
 {
 	EnablePWM();
 
-	for (uint8_t motorIdx = 0; motorIdx < Config::MC_MOTOR_AMOUNT; ++motorIdx)
+	for (uint8_t motorIdx = 0; motorIdx < Config::Constants::MC_MOTOR_AMOUNT; ++motorIdx)
 	{
 		const Motor& motor = motors[motorIdx];
 		EnablePin(motor.pin);	
@@ -65,13 +65,13 @@ void MotorController::Loop(uint32_t dt)
 
 void MotorController::WriteMotor(const Motor& motor, uint16_t command)
 {
-	WritePwm(motor.pin, command);
+	WritePwm(motor.pin, min(command, config.MC_PWM_MAX_COMMAND));
 }
 
 void MotorController::EnablePWM()
 {
     pmc_enable_periph_clk(PWM_INTERFACE_ID);
-    PWMC_ConfigureClocks(Config::MC_PWM_FREQUENCY * Config::MC_PWM_MAX_COMMAND, 0, F_CPU);
+    PWMC_ConfigureClocks(config.MC_PWM_FREQUENCY * config.MC_PWM_MAX_COMMAND, 0, VARIANT_MCK);
 }
 
 void MotorController::EnablePin(uint8_t pin)
@@ -81,12 +81,18 @@ void MotorController::EnablePin(uint8_t pin)
 
     // Make sure this is a PWM pin
     assert((desc.ulPinAttribute & PIN_ATTR_PWM) == PIN_ATTR_PWM);
+	
+    pinMode(pin, OUTPUT);
 
+	// Disable the channel so we can directly write to the registers
+	PWMC_DisableChannel(PWM_INTERFACE, channel);
+	while ((PWM_INTERFACE->PWM_SR & (1 << channel)) != 0);	// Wait for the channel to be disabled
+    
 	PIO_Configure(desc.pPort, PIO_OUTPUT_1, desc.ulPin, desc.ulPinConfiguration);
 
 	// Configre channel for our frequencies
 	PWMC_ConfigureChannel(PWM_INTERFACE, channel, PWM_CMR_CPRE_CLKA, 0, 0);
-	PWMC_SetPeriod(PWM_INTERFACE, channel, Config::MC_PWM_MAX_COMMAND);
+	PWMC_SetPeriod(PWM_INTERFACE, channel, config.MC_PWM_MAX_COMMAND);
 	PWMC_SetDutyCycle(PWM_INTERFACE, channel, 0);
 
 	// Enable the channel again

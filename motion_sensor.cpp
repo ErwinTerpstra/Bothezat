@@ -10,9 +10,8 @@
 using namespace bothezat;
 
 MotionSensor::MotionSensor() : 
-	gyroFilter(Filter<Vector3>::PASS_THROUGH, Config::MS_GYRO_FILTER_RC), 
 	orientation(), accelOrientation(), acceleration(), angularVelocity(),
-	yaw(0.0f), pitch(0.0f), roll(0.0f)
+	gyroOffset(), gyroRange(0), accelRange(0), gyroScale(1.0f), accelScale(1.0f)
 {
 	
 }
@@ -28,27 +27,25 @@ void MotionSensor::Loop(uint32_t dt)
 	// Read new values from i2c
 	ReadMPU();
 
-	float deltaSeconds = dt / 1000000.0f;
+	float deltaSeconds = dt * 1e-6f;
 	float scale = gyroScale * DEG_2_RAD;
 
+	// Convert raw data to scaled and calibrated data
 	ReadGyro(angularVelocity);
 	ReadAcceleration(acceleration);
 
-	// Filter the gyro data
-	angularVelocity = gyroFilter.Sample(angularVelocity, deltaSeconds);
-
-	// Convert axis rotations to quaternions
-	Quaternion yaw 		= Quaternion::AngleAxis(yaw,	angularVelocity.y * deltaSeconds, Vector3::Up());
-	Quaternion pitch 	= Quaternion::AngleAxis(pitch,	angularVelocity.x * deltaSeconds, Vector3::Right());
-	Quaternion roll 	= Quaternion::AngleAxis(roll,	angularVelocity.z * deltaSeconds, Vector3::Forward());
+	// Convert axis rotations to quaternion
+	Quaternion rotation = Quaternion::FromEulerAngles(rotation,
+													  angularVelocity.y * deltaSeconds, 
+													  angularVelocity.x * deltaSeconds, 
+												  	  angularVelocity.z * deltaSeconds);
 
 	// Apply relative rotations to saved orientation
-	Quaternion rotation = roll * pitch * yaw;
 	orientation = rotation * orientation;
 
 	// Only use accelerometer values if total acceleration is below threshold
 	float magnitude = acceleration.Length();
-	if (fabs(1.0f - magnitude) < Config::MS_ACCEL_MAX)
+	if (fabs(1.0f - magnitude) < config.MS_ACCEL_MAX)
 	{
 		Vector3 forward = orientation * Vector3::Forward();
 		Vector3 up = -acceleration;
@@ -66,37 +63,61 @@ void MotionSensor::Loop(uint32_t dt)
 
 			Quaternion::RotationBetween(accelOrientation, up, Vector3::Up());
 
-			Quaternion::Slerp(orientation, orientation, accelOrientation, Config::MS_ACCEL_CORRECTION_RC / (Config::MS_ACCEL_CORRECTION_RC + deltaSeconds));
+			Quaternion::Slerp(orientation, orientation, accelOrientation, config.MS_ACCEL_CORRECTION_RC / (config.MS_ACCEL_CORRECTION_RC + deltaSeconds));
 		}
 	}
 }
 
+void MotionSensor::Debug() const
+{
+	float yaw, pitch, roll;
+	orientation.ToEulerAngles(yaw, pitch, roll);
+	Debug::Print("Orientation:\n");
+	Debug::Print("Yaw = %.4f; Pitch = %.4f; Roll = %.4f\n", yaw, pitch, roll);
+
+	accelOrientation.ToEulerAngles(yaw, pitch, roll);
+	Debug::Print("Accel. orientation:\n");
+	Debug::Print("Yaw = %.4f; Pitch = %.4f; Roll = %.4f\n", yaw, pitch, roll);
+	Debug::Print("\n");
+
+	Debug::Print("Acceleration: %.4f;%.4f;%.4f;\tLength:%.4f\n", acceleration.x, acceleration.y, acceleration.z, acceleration.Length());
+	Debug::Print("Ang. vel.: %.4f;%.4f;%.4f;\tLength:%.4f\n", angularVelocity.x, angularVelocity.y, angularVelocity.z, angularVelocity.Length());
+}
+
 void MotionSensor::Calibrate()
 {
-	Debug::Print("Calibrating accelerometer with %d samples\n", Config::MS_CALIBRATION_SAMPLES);
+	Debug::Print("Calibrating accelerometer with %d samples\n", config.MS_CALIBRATION_SAMPLES);
 
 	float scale = 0.0f;
+	Vector3 averageGyro = Vector3::Zero();
 
 	// TODO: calibrate initial orientation from accelerometer
 
 	// Read multiple samples to find real accelerometer scale
-	for (uint8_t sampleIdx = 0; sampleIdx < Config::MS_CALIBRATION_SAMPLES; ++sampleIdx)
+	for (uint8_t sampleIdx = 0; sampleIdx < config.MS_CALIBRATION_SAMPLES; ++sampleIdx)
 	{
 		// Read new values from i2c
 		ReadMPU();
 
-		// Read the length of the acceleration vector
 		ReadAcceleration(acceleration);
-		scale += acceleration.Length() / Config::MS_CALIBRATION_SAMPLES;
+		ReadGyro(angularVelocity);
+
+		// The current length of the acceleration vector is the error in scale
+		scale += acceleration.Length() / config.MS_CALIBRATION_SAMPLES;
+
+		// Angular velocity in rest is the offset the gyro has
+		averageGyro += angularVelocity * (1.0f / config.MS_CALIBRATION_SAMPLES);
 
 		// Wait a while until next sample
-		delay(Config::MS_CALIBRATION_INTERVAL);
+		delay(config.MS_CALIBRATION_INTERVAL);
 	}
 
 	Debug::Print("Accelerometer calibrated at %.4f\n", scale);
+	Debug::Print("Gyroscope offset calibrated at: %.4f;%.4f;%.4f\n", averageGyro.x, averageGyro.y, averageGyro.z);
 
 	// Apply calibration scale to the conversion scale
 	accelScale *= 1.0f / scale;
+	gyroOffset = averageGyro;
 }
 
 void MotionSensor::SetupMPU()
@@ -138,22 +159,4 @@ void MotionSensor::ReadMPU()
 	Util::SwapEndianness((uint8_t*) &mpuData.gyroX, sizeof(mpuData.gyroX));
 	Util::SwapEndianness((uint8_t*) &mpuData.gyroY, sizeof(mpuData.gyroY));
 	Util::SwapEndianness((uint8_t*) &mpuData.gyroZ, sizeof(mpuData.gyroZ));
-
-	// Convert data to right handed system
-	//mpuData.accelZ = -mpuData.accelZ;
-}
-
-void MotionSensor::PrintOrientation()
-{
-	orientation.ToEulerAngles(yaw, pitch, roll);
-	Debug::Print("Orientation:\n");
-	Debug::Print("Yaw = %.4f; Pitch = %.4f; Roll = %.4f\n", yaw * RAD_2_DEG, pitch * RAD_2_DEG, roll * RAD_2_DEG);
-
-	accelOrientation.ToEulerAngles(yaw, pitch, roll);
-	Debug::Print("Accel. orientation:\n");
-	Debug::Print("Yaw = %.4f; Pitch = %.4f; Roll = %.4f\n", yaw * RAD_2_DEG, pitch * RAD_2_DEG, roll * RAD_2_DEG);
-	Debug::Print("\n");
-
-	Debug::Print("Acceleration: %.4f;%.4f;%.4f;\tLength:%.4f\n", acceleration.x, acceleration.y, acceleration.z, acceleration.Length());
-	Debug::Print("Ang. vel.: %.4f;%.4f;%.4f;\tLength:%.4f\n", angularVelocity.x, angularVelocity.y, angularVelocity.z, angularVelocity.Length());
 }

@@ -2,16 +2,11 @@
 #define _DEBUG_H_
 
 #include "Arduino.h"
-#include "module.h"
-
 namespace bothezat
 {
 	
-class Debug : public Module<Debug>
+class Debug
 {
-friend class Module<Debug>;
-
-public:
 
 private:
 	char buffer[255];
@@ -23,9 +18,6 @@ protected:
 	}
 	
 public:
-	virtual void Setup() { }
-	virtual void Loop(uint32_t dt) { }
-
 	void Print(const char* msg, va_list args)
 	{
 		vsprintf(buffer, msg, args);
@@ -34,6 +26,13 @@ public:
 	}
 
 public:
+	static Debug& Instance()
+	{
+		static Debug instance;
+
+		return instance;
+	}
+
 	static void Print(const char* msg, ...)
 	{
 		va_list args;

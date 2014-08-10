@@ -1,6 +1,9 @@
 #ifndef _QUATERNION_H_
 #define _QUATERNION_H_
 
+#include "util.h"
+#include "debug.h"
+
 namespace bothezat
 {
 	
@@ -76,6 +79,11 @@ struct Quaternion
 		return Quaternion(-x, -y, -z, w);
 	}
 
+	void ToEulerAngles(Rotation& rotation) const
+	{
+		ToEulerAngles(rotation.yaw, rotation.pitch, rotation.roll);
+	}
+
 	void ToEulerAngles(float& yaw, float& pitch, float& roll) const
 	{
 	    float w2 = w * w;
@@ -115,6 +123,10 @@ struct Quaternion
             pitch = asin(-2 * abcd);
             roll = atan2(x * y + w * z, 0.5f - (y2 + z2));
 	    }
+
+	    yaw *= RAD_2_DEG;
+	    pitch *= RAD_2_DEG;
+	    roll *= RAD_2_DEG;
 	}
 
 	Quaternion& operator=(const Quaternion& other)
@@ -200,7 +212,7 @@ struct Quaternion
 	static Quaternion AngleAxis(float angle, const Vector3& axis) 
 	{
 		Quaternion result;
-		AngleAxis(angle, axis);
+		AngleAxis(result, angle, axis);
 
 		return result;
 	}
@@ -276,6 +288,41 @@ struct Quaternion
 		return out;
 	}
 
+	static Quaternion FromEulerAngles(const Rotation& rotation)
+	{
+		Quaternion result;
+		FromEulerAngles(result, rotation.yaw, rotation.pitch, rotation.roll);
+
+		return result;
+	}
+
+	static Quaternion FromEulerAngles(float yaw, float pitch, float roll)
+	{
+		Quaternion result;
+		FromEulerAngles(result, yaw, pitch, roll);
+
+		return result;
+	}
+
+	static Quaternion FromEulerAngles(Quaternion& result, const Rotation& rotation)
+	{
+		return FromEulerAngles(result, rotation.yaw, rotation.pitch, rotation.roll);
+	}
+
+	static Quaternion FromEulerAngles(Quaternion& result, float yaw, float pitch, float roll)
+	{			
+		// Create quaternions for each rotation component
+		Quaternion yawQ, pitchQ, rollQ;
+
+		Quaternion::AngleAxis(yawQ, yaw * DEG_2_RAD, Vector3::Up());
+		Quaternion::AngleAxis(pitchQ, pitch * DEG_2_RAD, Vector3::Right());
+		Quaternion::AngleAxis(rollQ, roll * DEG_2_RAD, Vector3::Forward());
+
+		// Combine components to one rotation
+		result = rollQ * pitchQ * yawQ;
+		result.Normalize();
+	}
+
 	static Quaternion LookAt(const Vector3& forward, const Vector3& up)
 	{
 		Quaternion result;
@@ -337,7 +384,6 @@ struct Quaternion
 		*/
 
 		out.Normalize();
-		out.Print();
 
 		return out;
 	}

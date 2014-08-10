@@ -2,12 +2,17 @@
 #define _CONFIG_H_
 
 #include "Arduino.h"
+#include "vector3.h"
 
 namespace bothezat
 {
 
-struct Config
+class Vector3;
+
+class Config
 {	
+	
+public:
 	struct Pins
 	{
 		enum Pin
@@ -17,38 +22,99 @@ struct Config
 			I2C_SDA			= 20,
 			I2C_SCL			= 21,
 
-			RX_PWM			= 50
+			RX_PWM			= 44
 		};
 	};
 
+	struct Constants
+	{
+		/*
+		 *	Radio receiver
+		 */
+		static const uint8_t RX_PWM_AMOUNT = 4;
+
+		/*
+		 * Motor controller
+		 */
+		static const uint8_t MC_MOTOR_AMOUNT = 1;
+
+	};
+
+	struct ChannelCalibration
+	{
+		uint16_t min, max, deadband;
+
+		ChannelCalibration()
+		{
+			min = 1050;
+			max = 1950;
+			deadband = 30;
+		}
+	};
+
 	/*
-	 *	Radio receiver
+	 * System
 	 */
-	static const uint8_t RX_PWM_AMOUNT = 4;
+	 uint16_t SYS_LOOP_TIME;
+
+	/*
+	 * Radio receiver
+	 */
+	uint16_t RX_SIGNAL_MID;
+
+	ChannelCalibration RX_CHANNEL_CALIBRATION[16];
 
 	/*
 	 * Motion sensor
 	 */
-	static const uint8_t MS_CALIBRATION_SAMPLES = 10;		// Amount of samples for IMU
+	uint8_t MS_CALIBRATION_SAMPLES;
 
-	static const uint16_t MS_CALIBRATION_INTERVAL = 100;	// Time between IMU calibration samples
+	uint16_t MS_CALIBRATION_INTERVAL;
 
-	static const float MS_GYRO_FILTER_RC = 2.5f;			// RC for gyro high pass filter
+	float MS_GYRO_FILTER_RC;
 	
-	static const float MS_ACCEL_CORRECTION_RC = 0.000010f;	// Lower means slower correction to gyro by accelerometer
+	float MS_ACCEL_CORRECTION_RC;
 
-	static const float MS_ACCEL_MAX = 0.15f;				// Accelerometer values with a larger deviation from 1G than this will get discarded
+	float MS_ACCEL_MAX;
+
+	/*
+	 * Flight system
+	 */
+
+	Vector3 FS_MAN_ANGULAR_VELOCITY;
+
+	float FS_ATTI_MAX_PITCH;
+
+	float FS_ATTI_MAX_ROLL;
 
 	/*
 	 * Motor controller
 	 */
-	static const uint8_t MC_MOTOR_AMOUNT = 1;
+	uint32_t MC_PWM_FREQUENCY;
 
-	static const uint32_t MC_PWM_FREQUENCY = 488;
+	uint16_t MC_PWM_MIN_COMMAND;
 
-	static const uint16_t MC_PWM_MIN_COMMAND = 950;
+	uint16_t MC_PWM_MAX_COMMAND;
 
-	static const uint16_t MC_PWM_MAX_COMMAND = 2050;
+private:
+	Config();
+
+	static Config instance;
+
+public:
+	void ReadEEPROM();
+
+	void WriteEEPROM();
+
+	void LoadDefaults();
+
+public:
+
+	static Config& Instance()
+	{
+		return instance;
+	}
+
 
 };
 

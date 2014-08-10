@@ -28,11 +28,11 @@ private:
 public:
 	void Start();
 	void Stop();
-	uint64_t ReadValue() const;
+	uint32_t ReadValue() const;
 	void Configure(uint32_t flags);
 
-	uint16_t SetPrecision(uint16_t desiredPrecision);
-	uint64_t Micros() const;
+	uint32_t SetPrecision(uint32_t desiredPrecision);
+	uint32_t Micros() const;
 
 	Timer& operator=(const Timer& other);
 private:
@@ -53,8 +53,6 @@ public:
 	static Timer* GetFreeTimer()
 	{
 		Timer* timer = NULL;
-
-		Debug::Print("Requesting timer\n");
 
 		for (uint8_t timerIdx = 0; timerIdx < TIMER_AMOUNT; ++timerIdx)
 		{

@@ -148,6 +148,7 @@ public:
 				digitalWrite(PIN_WIRE_SDA, HIGH);
 				delayMicroseconds(5);
 
+				// Generate an extra clock pulse so next iteration we can check if the slave is still attempting to send something
 				digitalWrite(PIN_WIRE_SCL, HIGH);	delayMicroseconds(5);
 				digitalWrite(PIN_WIRE_SCL, LOW);	delayMicroseconds(5);
 				digitalWrite(PIN_WIRE_SCL, HIGH);	delayMicroseconds(5);

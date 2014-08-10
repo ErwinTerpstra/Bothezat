@@ -78,33 +78,37 @@ void Timer::Configure(uint32_t flags)
 	TC_Configure(timer, channel, flags);
 }
 
-uint64_t Timer::ReadValue() const
+uint32_t Timer::ReadValue() const
 {
 	return TC_ReadCV(timer, channel);
 }
 
-uint16_t Timer::SetPrecision(uint16_t desiredPrecision)
+uint32_t Timer::SetPrecision(uint32_t desiredPrecision)
 {
-	uint16_t precision;
+	uint32_t precision;
 	uint8_t idx;
 
 	for (idx = sizeof(CLOCK_DIVIDERS) - 1; idx > 1; idx -= 2)
 	{
-		divider = CLOCK_DIVIDERS[idx];
-		precision = (1000000L * divider) / F_CPU;
+		precision = (1000 * CLOCK_DIVIDERS[idx]) / (VARIANT_MCK / 1000000);
 
 		if (precision <= desiredPrecision)
 			break;
 	}
 
+	divider = CLOCK_DIVIDERS[idx];
 	Configure(CLOCK_DIVIDERS[idx - 1]);
 
 	return precision;
 }
 
-uint64_t Timer::Micros() const
+uint32_t Timer::Micros() const
 {
-	return (ReadValue() * divider) / (F_CPU / 1000000L);
+	// Use 64 bit to prevent overflow when multiplying
+	uint64_t micros = ReadValue();
+	micros = (micros * divider) / (VARIANT_MCK / 1000000);
+
+	return (uint32_t) micros;
 }
 
 void TC0_Handler()

@@ -21,11 +21,10 @@ private:
 	uint16_t accelRange, gyroRange;
 	float accelScale, gyroScale;
 
+	Vector3 gyroOffset;
+
 	Quaternion orientation, accelOrientation;
 	Vector3 angularVelocity, acceleration;
-
-	Filter<Vector3> gyroFilter;
-	float yaw, pitch, roll;
 
 protected:
 	MotionSensor();
@@ -34,9 +33,9 @@ public:
 
 	virtual void Setup();
 	virtual void Loop(uint32_t dt);
+	virtual void Debug() const;
 
 	void Calibrate();
-	void PrintOrientation();
 	
 private:
 	void SetupMPU();
@@ -71,7 +70,8 @@ private:
 		angularVelocity.z = mpuData.gyroZ;
 
 		angularVelocity *= gyroScale * DEG_2_RAD;
-
+		angularVelocity -= gyroOffset;
+		
 		ConvertVector(angularVelocity);
 	}
 };

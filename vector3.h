@@ -1,13 +1,20 @@
 #ifndef _VECTOR3_H_
 #define _VECTOR3_H_
 
+#include "debug.h"
+
 namespace bothezat
 {
 
 
 struct Vector3
 {
-	float x, y, z;
+	// Union that allows use of vector type as euler rotation container
+	union
+	{
+		struct { float x, y, z; };
+		struct { float pitch, yaw, roll; };
+	};
 
 	Vector3() : x(0.0f), y(0.0f), z(0.0f)
 	{
@@ -35,6 +42,16 @@ struct Vector3
 	{
 		Vector3 result = *this;
 		result.Normalize();
+
+		return result;
+	}
+
+	Vector3 ComponentMultiply(const Vector3& rhs)
+	{
+		Vector3 result = *this;
+		result.x *= rhs.x;
+		result.y *= rhs.y;
+		result.z *= rhs.z;
 
 		return result;
 	}
@@ -125,11 +142,11 @@ struct Vector3
 		return out;
 	}
 
-	static Vector3 Forward() { return Vector3(0.0f, 0.0f, 1.0f); }
-	static Vector3 Up() { return Vector3(0.0f, 1.0f, 0.0f); }
-	static Vector3 Right() { return Vector3(1.0f, 0.0f, 0.0f); }
+	static Vector3 Zero()		{ return Vector3(); }
+	static Vector3 Forward()	{ return Vector3(0.0f, 0.0f, 1.0f); }
+	static Vector3 Up()			{ return Vector3(0.0f, 1.0f, 0.0f); }
+	static Vector3 Right()		{ return Vector3(1.0f, 0.0f, 0.0f); }
 };
-
 	
 // Binary operators
 __inline Vector3 operator+(const Vector3& lhs, const Vector3& rhs)
@@ -156,6 +173,7 @@ __inline Vector3 operator*(const float& lhs, const Vector3& rhs)
 	return rhs * lhs;
 }
 
+typedef Vector3 Rotation;
 
 }
 

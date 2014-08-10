@@ -1,11 +1,14 @@
 #ifndef _MODULE_H_
 #define _MODULE_H_
 
+#include "base_module.h"
+#include "config.h"
+
 namespace bothezat
 {
 	
 template <class Derived>
-class Module
+class Module : public BaseModule
 {
 public:
 
@@ -13,14 +16,14 @@ private:
 	static Derived* instance;
 
 protected:
+	const Config& config;
 
-	Module() { }
+	Module() : config(Config::Instance())
+	{
+
+	}
 
 public:
-
-	virtual void Setup() = 0;
-	virtual void Loop(uint32_t dt) = 0;
-
 
 	static Derived& Instance()
 	{

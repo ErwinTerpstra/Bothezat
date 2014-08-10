@@ -7,84 +7,130 @@
 
 #include "i2c.h"
 #include "motion_sensor.h"
+#include "receiver.h"
 #include "pwm_receiver.h"
+#include "flight_system.h"
 #include "motor_controller.h"
 #include "led_controller.h"
 #include "timer.h"
 
 using namespace bothezat;
 
-MotionSensor& motionSensor = MotionSensor::Instance();
-PwmReceiver& receiver = PwmReceiver::Instance();
-LedController& ledController = LedController::Instance();
-MotorController& motorController = MotorController::Instance();
 
-Timer* timer = NULL;
+class Core
+{
 
-uint32_t dt, debugTime;
-uint64_t loopStart, lastLoopStart, loopEnd;
-const uint32_t loopTime = 0;
+private:
+
+
+	Timer* timer;
+
+	uint32_t dt, debugTime;
+	uint32_t loopStart, lastLoopStart, loopEnd;
+
+	Config& config;
+
+	// Modules
+	Receiver* receiver;
+	MotionSensor* motionSensor;
+	LedController* ledController;
+	FlightSystem* flightSystem;
+	MotorController* motorController;
+
+public:
+	Core() : timer(NULL), config(Config::Instance())
+	{
+
+	}
+
+	void Setup()
+	{
+		Serial.begin(115200);
+		Serial.println("======== Bothezat ========");
+		Serial.println("Initializing...");
+		
+		config.ReadEEPROM();
+
+		I2C::Setup();
+
+		// Construct modules
+		Receiver::SetReceiver(PwmReceiver::Instance());
+
+		receiver = &Receiver::CurrentReceiver();
+		motionSensor = &MotionSensor::Instance();
+		flightSystem = &FlightSystem::Instance();
+		ledController = &LedController::Instance();
+		motorController = &MotorController::Instance();
+
+		// Initialize modules
+		motionSensor->Setup();
+		receiver->Setup();
+		flightSystem->Setup();
+		//ledController->Setup();
+		motorController->Setup();
+
+		// Initialize timer
+		Timer::EnableTimers();
+		timer = Timer::GetFreeTimer();
+
+		uint16_t precision = timer->SetPrecision(1000);
+		Debug::Print("Main timer set to %d ns precision\n", precision);
+
+		timer->Start();
+
+		dt = 10;
+		debugTime = 0;
+		loopStart = lastLoopStart = timer->Micros();
+
+		Serial.println("Initialization complete!");
+	}
+
+	void Loop()
+	{
+		loopStart = timer->Micros();
+
+		// Don't update deltatime on an overflow
+		if (lastLoopStart <= loopStart)
+			dt = loopStart - lastLoopStart;
+		
+		lastLoopStart = loopStart;
+
+		motionSensor->Loop(dt);
+		receiver->Loop(dt);
+		//ledController->Loop(dt);
+		flightSystem->Loop(dt);
+		motorController->Loop(dt);
+
+		debugTime += dt;
+
+		if (debugTime >= 500000L)
+		{
+			motionSensor->Debug();
+			receiver->Debug();
+			flightSystem->Debug();
+
+			Debug::Print("Last loop time: %dus\n", dt);
+			Debug::Print("Uptime: %ds\n", timer->Micros() / 1000000);
+			
+			debugTime = 0;
+		}
+
+		loopEnd = timer->Micros();
+
+		// Limit loop time
+		delayMicroseconds(constrain(config.SYS_LOOP_TIME - (loopEnd - loopStart), 0, config.SYS_LOOP_TIME));
+	}
+
+};
+
+Core core;
 
 void setup()
 {
-	Serial.begin(115200);
-	Serial.println("======== Bothezat ========");
-	Serial.println("Initializing...");
-
-	Timer::EnableTimers();
-	timer = Timer::GetFreeTimer();
-
-	I2C::Setup();
-
-	motionSensor.Setup();
-	receiver.Setup();
-	//ledController.Setup();
-	motorController.Setup();
-
-	uint16_t precision = timer->SetPrecision(2);
-	Debug::Print("Timer set to %d us precision\n", precision);
-
-	timer->Start();
-
-	dt = 10;
-	debugTime = 0;
-	loopStart = lastLoopStart = timer->Micros();
-
-	Serial.println("Initialization complete!");
+	core.Setup();
 }
 
 void loop()
 {
-	loopStart = timer->Micros();
-
-	// Overflow, don't update deltatime
-	if (lastLoopStart <= loopStart)
-	{
-		dt = loopStart - lastLoopStart;
-		lastLoopStart = loopStart;
-	}
-	else
-	{
-		Serial.println(F("Overflow!"));
-	}
-
-	motionSensor.Loop(dt);
-	receiver.Loop(dt);
-	//ledController.Loop(dt);
-	motorController.Loop(dt);
-
-	debugTime += dt;
-
-	if (debugTime >= 500000L)
-	{
-		motionSensor.PrintOrientation();
-		receiver.PrintChannels();
-		Debug::Print("Last loop time: %dus\n", dt);
-		
-		debugTime = 0;
-	}
-
-	loopEnd = timer->Micros();
-
-	delayMicroseconds(constrain(loopTime - (loopEnd - loopStart), 0, loopTime));
+	core.Loop();
 }
