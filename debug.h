@@ -2,56 +2,36 @@
 #define _DEBUG_H_
 
 #include "Arduino.h"
+
 namespace bothezat
 {
 	
 class Debug
 {
+public:
+	static const uint32_t MAX_DEBUG_PRINT_LENGTH = 512;
 
 private:
-	char buffer[255];
+	char buffer[MAX_DEBUG_PRINT_LENGTH];
 
-protected:
-	Debug()
-	{
-
-	}
+	Debug();
 	
 public:
-	void Print(const char* msg, va_list args)
-	{
-		vsprintf(buffer, msg, args);
-
-		Serial.print(buffer);
-	}
+	void Print(const char* msg, va_list args);
 
 public:
+
+	static void Print(const char* msg, ...);
+
+	static bool AssertHandler(const char* code, const char* file, const uint32_t line);
+
+	static bool Halt();
+	
 	static Debug& Instance()
 	{
 		static Debug instance;
 
 		return instance;
-	}
-
-	static void Print(const char* msg, ...)
-	{
-		va_list args;
-		va_start(args, msg);
-
-		Instance().Print(msg, args);
-		va_end(args);
-	}
-
-	static bool AssertHandler(const char* code, const char* file, const uint32_t line)
-	{
-		Print("Assert failed!\n%s at %s:%d\n", code, file, line);
-		return true;
-	}
-
-	static bool Halt()
-	{
-		while(1);
-		return true;
 	}
 };
 

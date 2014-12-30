@@ -129,6 +129,7 @@ void MotionSensor::SetupMPU()
 	//    The device is in sleep mode.
 	//
 
+	// TODO: generalize this to the config or a constant
 	// Set the accelerometer range to 4G and the gyro range to 500 degrees/s
 	accelRange = 4;
 	accelScale = (1.0f / INT16_MAX) * accelRange;

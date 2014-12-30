@@ -12,6 +12,7 @@
 #include "flight_system.h"
 #include "motor_controller.h"
 #include "led_controller.h"
+#include "serial_interface.h"
 #include "timer.h"
 
 using namespace bothezat;
@@ -36,6 +37,7 @@ private:
 	LedController* ledController;
 	FlightSystem* flightSystem;
 	MotorController* motorController;
+	SerialInterface* serialInterface;
 
 public:
 	Core() : timer(NULL), config(Config::Instance())
@@ -44,16 +46,20 @@ public:
 	}
 
 	void Setup()
-	{
-		Serial.begin(115200);
-		Serial.println("======== Bothezat ========");
-		Serial.println("Initializing...");
-		
+	{		
 		config.ReadEEPROM();
 
+		Util::Init();
 		I2C::Setup();
 
-		// Construct modules
+		// Initialize serial interface first so that we can begin sending messages
+		serialInterface = &SerialInterface::Instance();
+		serialInterface->Setup();
+
+		Debug::Print("======== Bothezat ========\n");
+		Debug::Print("Initializing...\n");
+
+		// Construct other modules
 		Receiver::SetReceiver(PwmReceiver::Instance());
 
 		receiver = &Receiver::CurrentReceiver();
@@ -61,7 +67,7 @@ public:
 		flightSystem = &FlightSystem::Instance();
 		ledController = &LedController::Instance();
 		motorController = &MotorController::Instance();
-
+		
 		// Initialize modules
 		motionSensor->Setup();
 		receiver->Setup();
@@ -82,7 +88,7 @@ public:
 		debugTime = 0;
 		loopStart = lastLoopStart = timer->Micros();
 
-		Serial.println("Initialization complete!");
+		Debug::Print("Initialization complete!\n");
 	}
 
 	void Loop()
@@ -100,6 +106,7 @@ public:
 		//ledController->Loop(dt);
 		flightSystem->Loop(dt);
 		motorController->Loop(dt);
+		serialInterface->Loop(dt);
 
 		debugTime += dt;
 

@@ -1,6 +1,8 @@
 #ifndef _BASE_MODULE_H_
 #define _BASE_MODULE_H_
 
+#include "Arduino.h"
+
 namespace bothezat
 {
 	

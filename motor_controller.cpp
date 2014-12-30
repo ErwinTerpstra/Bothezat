@@ -59,7 +59,6 @@ void MotorController::Setup()
 void MotorController::Loop(uint32_t dt)
 {
 	PwmReceiver& receiver = PwmReceiver::Instance();
-
 	WriteMotor(motors[0], receiver.channels[PwmReceiver::THROTTLE]);
 }
 
@@ -82,13 +81,11 @@ void MotorController::EnablePin(uint8_t pin)
     // Make sure this is a PWM pin
     assert((desc.ulPinAttribute & PIN_ATTR_PWM) == PIN_ATTR_PWM);
 	
-    pinMode(pin, OUTPUT);
-
 	// Disable the channel so we can directly write to the registers
-	PWMC_DisableChannel(PWM_INTERFACE, channel);
-	while ((PWM_INTERFACE->PWM_SR & (1 << channel)) != 0);	// Wait for the channel to be disabled
-    
-	PIO_Configure(desc.pPort, PIO_OUTPUT_1, desc.ulPin, desc.ulPinConfiguration);
+	//PWMC_DisableChannel(PWM_INTERFACE, channel);
+	//while ((PWM_INTERFACE->PWM_SR & (1 << channel)) != 0);	// Wait for the channel to be disabled
+
+	PIO_Configure(desc.pPort, desc.ulPinType, desc.ulPin, desc.ulPinConfiguration);
 
 	// Configre channel for our frequencies
 	PWMC_ConfigureChannel(PWM_INTERFACE, channel, PWM_CMR_CPRE_CLKA, 0, 0);

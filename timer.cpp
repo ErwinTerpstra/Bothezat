@@ -23,7 +23,7 @@ Timer Timer::timerPool[TIMER_AMOUNT] =
 	Timer(TC1, 2, TC5_IRQn),
 	Timer(TC2, 0, TC6_IRQn),
 	Timer(TC2, 1, TC7_IRQn),
-	Timer(TC2, 2, TC8_IRQn)
+	Timer(TC2, 2, TC8_IRQn),
 };
 
 Timer::Timer(Tc* timer, uint8_t channel, IRQn_Type irq) : 

@@ -26,7 +26,12 @@ void Config::LoadDefaults()
 	/*
 	 * System
 	 */
-	SYS_LOOP_TIME				= 5000;			// Minimum loop time (us) the system is trying to match, zero means as fast as possible
+	SYS_LOOP_TIME				= 0;			// Minimum loop time (us) the system is trying to match, zero means as fast as possible
+
+	/*
+	 * Serial interface
+	 */
+	SR_BAUD_RATE 				= 115200; 		// Baud rate for serial communication
 
 	/*
 	 * Radio receiver
@@ -39,7 +44,7 @@ void Config::LoadDefaults()
 	MS_CALIBRATION_SAMPLES		= 10;			// Amount of samples for IMU
 	MS_CALIBRATION_INTERVAL		= 100;			// Time between IMU calibration samples
 	MS_GYRO_FILTER_RC			= 2.5f;			// RC for gyro high pass filter
-	MS_ACCEL_CORRECTION_RC		= 0.000008f;	// Lower means slower correction to gyro by accelerometer
+	MS_ACCEL_CORRECTION_RC		= 0.001f;		// Lower means slower correction to gyro by accelerometer
 	MS_ACCEL_MAX				= 0.15f;		// Accelerometer values with a larger deviation from 1G than this will get discarded
 
 	/*

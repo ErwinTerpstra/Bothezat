@@ -8,10 +8,10 @@ using namespace bothezat;
 
 PwmReceiver::PwmReceiver() : Receiver(), timer(NULL)
 {
-	signalPins[0] = SignalPin(44, Receiver::CHANNEL1);
-	signalPins[1] = SignalPin(45, Receiver::CHANNEL2);
-	signalPins[2] = SignalPin(46, Receiver::CHANNEL3);
-	signalPins[3] = SignalPin(47, Receiver::CHANNEL4);
+	signalPins[0] = SignalPin(44, 40, Receiver::CHANNEL1);
+	signalPins[1] = SignalPin(45, 41, Receiver::CHANNEL2);
+	signalPins[2] = SignalPin(46, 42, Receiver::CHANNEL3);
+	signalPins[3] = SignalPin(47, 43, Receiver::CHANNEL4);
 }
 
 void PwmReceiver::Setup()
@@ -33,6 +33,8 @@ void PwmReceiver::Setup()
 		// Configure pin as input
 		PIO_Configure(desc.pPort, PIO_INPUT, desc.ulPin, 0);
 
+		pinMode(pin.debugPin, OUTPUT);
+
 		// Enable interrupt on each edge change
 		desc.pPort->PIO_AIMDR = pin.mask;
 		desc.pPort->PIO_IER = pin.mask;
@@ -49,7 +51,9 @@ void PwmReceiver::Setup()
 
 void PwmReceiver::Loop(uint32_t dt)
 {
-	//ReadRaw();
+	//*
+	ReadRaw();
+	/*/
 
 	uint16_t channels[Receiver::MAX_CHANNELS];				// Pulse length for each channel
 
@@ -66,6 +70,7 @@ void PwmReceiver::Loop(uint32_t dt)
 	
 	// Save new pulse lengths
 	UpdateChannels(channels);
+	//*/
 }
 
 void PwmReceiver::HandleISR(uint32_t mask)
@@ -90,11 +95,13 @@ void PwmReceiver::HandleISR(uint32_t mask)
 	{
 		// Start of pulse, save pulse start time
 		pin->pulseStart = timer->Micros();
+		digitalWrite(pin->debugPin, HIGH);
 	}
 	else
 	{
 		// End of pulse, save pulse length
 		pin->pulseLength = timer->Micros() - pin->pulseStart;
+		digitalWrite(pin->debugPin, LOW);
 	}
 }
 

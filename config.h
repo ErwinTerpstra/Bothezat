@@ -55,7 +55,12 @@ public:
 	/*
 	 * System
 	 */
-	 uint16_t SYS_LOOP_TIME;
+	uint16_t SYS_LOOP_TIME;
+
+	/*
+	 * Serial interface
+	 */
+	uint32_t SR_BAUD_RATE;
 
 	/*
 	 * Radio receiver

@@ -36,12 +36,14 @@ public:
 	virtual void Debug() const;
 
 	void Calibrate();
+
+	const Quaternion& CurrentOrientation() const { return orientation; }
+	const Quaternion& AccelerometerOrientation() const { return accelOrientation; }
+
 	
 private:
 	void SetupMPU();
 	void ReadMPU();
-
-	const Quaternion& CurrentOrientation() const { return orientation; }
 
 	__inline void ConvertVector(Vector3& v)
 	{

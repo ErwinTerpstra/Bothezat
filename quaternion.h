@@ -4,10 +4,12 @@
 #include "util.h"
 #include "debug.h"
 
+#include "binary_stream.h"
+
 namespace bothezat
 {
 	
-struct Quaternion
+struct Quaternion : public Serializable, public Deserializable
 {
 	float x, y, z, w;
 
@@ -202,6 +204,27 @@ struct Quaternion
 	void Print() const
 	{
 		Debug::Print("%.4f;%.4f;%.4f;%.4f\n", x, y, z, w);
+	}
+
+	void Serialize(BinaryWriteStream& stream) const
+	{
+		stream.Write(x);
+		stream.Write(y);
+		stream.Write(z);
+		stream.Write(w);
+	}
+
+	uint32_t SerializedSize() const { return sizeof(float) * 4; }
+
+	bool Deserialize(BinaryReadStream& stream)
+	{
+		if (stream.Available() < SerializedSize())
+			return false;
+
+		x = stream.ReadFloat();
+		y = stream.ReadFloat();
+		z = stream.ReadFloat();
+		w = stream.ReadFloat();	
 	}
 
 	static float Dot(const Quaternion& q1, const Quaternion& q2) 

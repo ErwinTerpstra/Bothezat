@@ -20,15 +20,20 @@ public:
 	struct SignalPin
 	{	
 		uint16_t pin;
+		uint16_t debugPin;
 		uint32_t mask;
 
 		Channel channel;
 		uint32_t pulseLength;
 		uint32_t pulseStart;
 
+		bool x;
+
 		SignalPin() { }
 
-		SignalPin(uint16_t pin, Channel channel) : pin(pin), channel(channel), pulseLength(0), pulseStart(0)
+		SignalPin(uint16_t pin, uint16_t debugPin, Channel channel) : 
+				pin(pin), debugPin(debugPin), 
+				channel(channel), pulseLength(0), pulseStart(0), x(false)
 		{
 			mask = g_APinDescription[pin].ulPin;
 		}
@@ -39,6 +44,7 @@ public:
 				return *this;
 
 			pin 			= other.pin;
+			debugPin		= other.debugPin;
 			mask 			= other.mask;
 			channel 		= other.channel;
 			pulseLength 	= other.pulseLength;

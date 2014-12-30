@@ -12,6 +12,8 @@
 #define PI_HALF PI * 0.5f
 #define PI_QUART PI * 0.25f
 
+#define ENUM_PADDING_VALUE 0xFFFFFFFF
+
 #include "config.h"
 #include "util.h"
 #include "debug.h"
