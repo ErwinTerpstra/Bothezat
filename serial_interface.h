@@ -8,7 +8,7 @@
 
 #include "ring_buffer.h"
 #include "arduino_serial.h"
-
+ 
 namespace bothezat
 {
 
@@ -20,7 +20,6 @@ private:
 	static const uint32_t READ_CHUNK_SIZE = 16;
 
 	static const uint32_t MESSAGE_BUFFER_SIZE	= 128;
-	static const uint32_t TEXT_BUFFER_SIZE		= 1024;
 	static const uint32_t RESOURCE_BUFFER_SIZE 	= 256;
 
 	struct Message : public Serializable, public Deserializable
@@ -70,7 +69,9 @@ private:
 
 		const uint8_t* payload;
 
-		Message() : magic(MESSAGE_MAGIC), crc(0), payload(NULL)
+		bool headersRead;
+
+		Message() : magic(MESSAGE_MAGIC), crc(0), payload(NULL), headersRead(false)
 		{
 
 		}
@@ -237,13 +238,9 @@ private:
 
 	RingBuffer messageBuffer;
 	RingBuffer resourceBuffer;
-	RingBuffer textBuffer;
 
 	// The message that was last received, or is currently being read
 	Message lastReceivedMessage;
-
-	// Whether the headers of the last received message have completely been read
-	bool headersRead;
 
 	// Shared buffer for message payload, is allocated with MAX_PAYLOAD_LENGTH
 	uint8_t* payloadBuffer;

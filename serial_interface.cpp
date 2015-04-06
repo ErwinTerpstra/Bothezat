@@ -8,7 +8,7 @@
 
 using namespace bothezat;
 
-SerialInterface::SerialInterface() : payloadBuffer(NULL), serialPort(SerialPort::Instance()), headersRead(false)
+SerialInterface::SerialInterface() : payloadBuffer(NULL), serialPort(SerialPort::Instance())
 {
 	
 }
@@ -35,6 +35,7 @@ void SerialInterface::Setup()
 void SerialInterface::Loop(uint32_t dt)
 {
 	ReadMessages();
+	ProcessMessages();
 }
 
 void SerialInterface::SendLog(const char* msg)
@@ -64,7 +65,7 @@ void SerialInterface::ReadMessages()
 			PurgeMessageBuffer();
 
 		// Attempt to transfer the newly read data to the message buffer
-		uint32_t bytesWritten = messageBuffer.writeStream.Write(&readChunk[bytesWritten], chunkSize - bytesWritten);
+		uint32_t bytesWritten = messageBuffer.writeStream.Write(readChunk, chunkSize);
 		assert(bytesWritten == chunkSize);
 	}
 }
@@ -85,7 +86,8 @@ uint32_t SerialInterface::ProcessMessages()
 void SerialInterface::ProcessMessage(const Message& message)
 {
 	// For now, FC only handles requests
-	assert(message.phase == Message::PHASE_REQUEST);
+	if (message.phase != Message::PHASE_REQUEST)
+		return;
 
 	switch (message.type)
 	{
@@ -171,7 +173,7 @@ void SerialInterface::ProcessLogRequest(const Message& requestMessage)
 
 bool SerialInterface::ReadMessage(Message& message)
 {
-	if (!headersRead && !ReadMessageHeaders(message))
+	if (!message.headersRead && !ReadMessageHeaders(message))
 		return false;
 
 	// Check if there is enough data in the buffer for the complete message
@@ -209,7 +211,7 @@ bool SerialInterface::ReadMessageHeaders(Message& message)
 		return false;
 	}
 	
-	headersRead = true;
+	message.headersRead = true;
 
 	return true;
 }
@@ -268,7 +270,7 @@ void SerialInterface::SendResponseMessage(const Message& requestMessage, Seriali
 void SerialInterface::PurgeMessageBuffer()
 {
 	messageBuffer.Clear();
-	headersRead = false;
+	lastReceivedMessage.headersRead = false;
 }
 
 Util::crc SerialInterface::CalculateMessageCRC(const Message& message) const
