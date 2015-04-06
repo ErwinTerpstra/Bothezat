@@ -14,6 +14,8 @@
 
 #define ENUM_PADDING_VALUE 0xFFFFFFFF
 
+#include <Arduino.h>
+
 #include "config.h"
 #include "util.h"
 #include "debug.h"

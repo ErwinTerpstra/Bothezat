@@ -8,10 +8,10 @@ using namespace bothezat;
 
 PwmReceiver::PwmReceiver() : Receiver(), timer(NULL)
 {
-	signalPins[0] = SignalPin(44, 40, Receiver::CHANNEL1);
-	signalPins[1] = SignalPin(45, 41, Receiver::CHANNEL2);
-	signalPins[2] = SignalPin(46, 42, Receiver::CHANNEL3);
-	signalPins[3] = SignalPin(47, 43, Receiver::CHANNEL4);
+	signalPins[0] = SignalPin(48, 40, Receiver::CHANNEL1);
+	signalPins[1] = SignalPin(49, 41, Receiver::CHANNEL2);
+	signalPins[2] = SignalPin(50, 42, Receiver::CHANNEL3);
+	signalPins[3] = SignalPin(51, 43, Receiver::CHANNEL4);
 }
 
 void PwmReceiver::Setup()
@@ -44,7 +44,7 @@ void PwmReceiver::Setup()
 	timer = Timer::GetFreeTimer();
 	uint16_t precision = timer->SetPrecision(2000);
 
-	Debug::Print("PWM timer set to %d ns precision\n", precision);
+	Debug::Print("Receiver timer set to %d ns precision\n", precision);
 
 	timer->Start();
 }

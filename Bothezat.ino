@@ -59,24 +59,25 @@ public:
 		Debug::Print("======== Bothezat ========\n");
 		Debug::Print("Initializing...\n");
 
+		// Initialize timer
+		Timer::EnableTimers();
+
 		// Construct other modules
 		Receiver::SetReceiver(PwmReceiver::Instance());
 
 		receiver = &Receiver::CurrentReceiver();
 		motionSensor = &MotionSensor::Instance();
-		flightSystem = &FlightSystem::Instance();
-		ledController = &LedController::Instance();
-		motorController = &MotorController::Instance();
-		
+		//flightSystem = &FlightSystem::Instance();
+		//ledController = &LedController::Instance();
+		//motorController = &MotorController::Instance();
+
 		// Initialize modules
 		motionSensor->Setup();
 		receiver->Setup();
-		flightSystem->Setup();
+		//flightSystem->Setup();
 		//ledController->Setup();
-		motorController->Setup();
+		//motorController->Setup();
 
-		// Initialize timer
-		Timer::EnableTimers();
 		timer = Timer::GetFreeTimer();
 
 		uint16_t precision = timer->SetPrecision(1000);
@@ -104,9 +105,9 @@ public:
 		motionSensor->Loop(dt);
 		receiver->Loop(dt);
 		//ledController->Loop(dt);
-		flightSystem->Loop(dt);
-		motorController->Loop(dt);
-		serialInterface->Loop(dt);
+		//flightSystem->Loop(dt);
+		//motorController->Loop(dt);
+		//serialInterface->Loop(dt);
 
 		debugTime += dt;
 
@@ -114,7 +115,7 @@ public:
 		{
 			motionSensor->Debug();
 			receiver->Debug();
-			flightSystem->Debug();
+			//flightSystem->Debug();
 
 			Debug::Print("Last loop time: %dus\n", dt);
 			Debug::Print("Uptime: %ds\n", timer->Micros() / 1000000);

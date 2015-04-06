@@ -53,7 +53,7 @@ void MotorController::Setup()
 		EnablePin(motor.pin);	
 	}
 
-	delay(10);
+	//delay(10);
 }
 
 void MotorController::Loop(uint32_t dt)
@@ -69,6 +69,8 @@ void MotorController::WriteMotor(const Motor& motor, uint16_t command)
 
 void MotorController::EnablePWM()
 {
+	Debug::Print("Enabling PWM periphial...\n");
+
     pmc_enable_periph_clk(PWM_INTERFACE_ID);
     PWMC_ConfigureClocks(config.MC_PWM_FREQUENCY * config.MC_PWM_MAX_COMMAND, 0, VARIANT_MCK);
 }
@@ -82,8 +84,8 @@ void MotorController::EnablePin(uint8_t pin)
     assert((desc.ulPinAttribute & PIN_ATTR_PWM) == PIN_ATTR_PWM);
 	
 	// Disable the channel so we can directly write to the registers
-	//PWMC_DisableChannel(PWM_INTERFACE, channel);
-	//while ((PWM_INTERFACE->PWM_SR & (1 << channel)) != 0);	// Wait for the channel to be disabled
+	PWMC_DisableChannel(PWM_INTERFACE, channel);
+	while ((PWM_INTERFACE->PWM_SR & (1 << channel)) != 0);	// Wait for the channel to be disabled
 
 	PIO_Configure(desc.pPort, desc.ulPinType, desc.ulPin, desc.ulPinConfiguration);
 
@@ -94,6 +96,8 @@ void MotorController::EnablePin(uint8_t pin)
 
 	// Enable the channel again
 	PWMC_EnableChannel(PWM_INTERFACE, channel);
+
+	Debug::Print("Motor on pin %u enabled\n", pin);
 }
 
 void MotorController::WritePwm(uint8_t pin, uint16_t dutyCycle)

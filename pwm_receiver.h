@@ -27,8 +27,6 @@ public:
 		uint32_t pulseLength;
 		uint32_t pulseStart;
 
-		bool x;
-
 		SignalPin() { }
 
 		SignalPin(uint16_t pin, uint16_t debugPin, Channel channel) : 

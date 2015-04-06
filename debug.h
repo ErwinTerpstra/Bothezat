@@ -35,7 +35,8 @@ public:
 	}
 };
 
-#define assert(x) ((void)(!(x) && Debug::AssertHandler(#x, __FILE__, __LINE__) && Debug::Halt()))
+//#define assert(x) ((void)(!(x) && Debug::AssertHandler(#x, __FILE__, __LINE__) && Debug::Halt()))
+#define assert(x) 
 
 }
 

@@ -2,6 +2,7 @@
 #define _TIMER_H_
 
 #include "Arduino.h"
+#include "debug.h"
 
 namespace bothezat
 {
@@ -42,6 +43,8 @@ private:
 public:
 	static void EnableTimers()
 	{
+		Debug::Print("Enabling timer periphial...\n");
+		
 		// Enable the timer periphial we are going to use
 	  	pmc_set_writeprotect(false);
 		pmc_enable_periph_clk(ID_TC0);
@@ -60,6 +63,7 @@ public:
 
 			if (timer->free)
 			{
+				Debug::Print("Using timer %u\n", timerIdx);
 				timer->free = false;
 				return timer;
 			}
