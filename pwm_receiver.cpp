@@ -10,13 +10,14 @@ PwmReceiver::PwmReceiver() : Receiver(), timer(NULL)
 {
 	signalPins[0] = SignalPin(48, 40, Receiver::CHANNEL1);
 	signalPins[1] = SignalPin(49, 41, Receiver::CHANNEL2);
-	signalPins[2] = SignalPin(50, 42, Receiver::CHANNEL3);
-	signalPins[3] = SignalPin(51, 43, Receiver::CHANNEL4);
+	//signalPins[2] = SignalPin(50, 42, Receiver::CHANNEL3);
+	//signalPins[3] = SignalPin(51, 43, Receiver::CHANNEL4);
 }
 
 void PwmReceiver::Setup()
 {
 	// Initialize interrupt channel
+	/*
 	pmc_enable_periph_clk(ID_PIOC);
 	NVIC_DisableIRQ(PIOC_IRQn);
 	NVIC_ClearPendingIRQ(PIOC_IRQn);
@@ -39,6 +40,10 @@ void PwmReceiver::Setup()
 		desc.pPort->PIO_AIMDR = pin.mask;
 		desc.pPort->PIO_IER = pin.mask;
 	}
+	/*/
+	for (uint8_t pinIdx = 0; pinIdx < Config::Constants::RX_PWM_AMOUNT; ++pinIdx)
+		pinMode(Config::Pins::RX_PWM + pinIdx, INPUT);
+	//*/
 
 	// Create a timer with a precision of at least 2 us
 	timer = Timer::GetFreeTimer();
@@ -57,9 +62,9 @@ void PwmReceiver::Loop(uint32_t dt)
 
 	uint16_t channels[Receiver::MAX_CHANNELS];				// Pulse length for each channel
 
-	// Initialize all channels to zero
+	// Initialize all channels to the mid level
 	for (uint8_t channel = 0; channel < Receiver::MAX_CHANNELS; ++channel)
-		channels[channel] = 0;
+		channels[channel] = config.RX_CHANNEL_CALIBRATION[channel].mid;
 
 	// Copy pulse lengths from signal pins to channel array
 	for (uint8_t pinIdx = 0; pinIdx < Config::Constants::RX_PWM_AMOUNT; ++pinIdx)
@@ -110,9 +115,9 @@ void PwmReceiver::ReadRaw()
 	uint16_t channels[Receiver::MAX_CHANNELS];						// Pulse length for each channel
 	uint8_t channelsReading = Config::Constants::RX_PWM_AMOUNT;		// Amount of pin which are still being measured.
 
-	// Initialize all channels to zero
+	// Initialize all channels to the mid level
 	for (uint8_t channel = 0; channel < Receiver::MAX_CHANNELS; ++channel)
-		channels[channel] = 0;
+		channels[channel] = config.RX_CHANNEL_CALIBRATION[channel].mid;
 
 	// Disable interrupts to get accurate timing
 	noInterrupts();

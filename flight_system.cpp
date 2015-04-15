@@ -10,7 +10,7 @@ FlightSystem::FlightSystem()
 	flightModes[MANUAL]		= new ManualMode(receiver);
 	flightModes[ATTITUDE]	= new AttitudeMode(receiver);
 
-	currentMode = flightModes[MANUAL];
+	currentMode = flightModes[ATTITUDE];
 	currentMode->OnEnter();
 }
 

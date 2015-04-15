@@ -47,7 +47,7 @@ public:
 private:
 	static Receiver* currentReceiver;
 
-	Config& config;
+	const Config& config;
 
 	bool connected;
 

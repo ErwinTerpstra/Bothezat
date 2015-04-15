@@ -22,7 +22,7 @@ public:
 			I2C_SDA			= 20,
 			I2C_SCL			= 21,
 
-			RX_PWM			= 44
+			RX_PWM			= 48
 		};
 	};
 
@@ -31,22 +31,23 @@ public:
 		/*
 		 *	Radio receiver
 		 */
-		static const uint8_t RX_PWM_AMOUNT = 4;
+		static const uint8_t RX_PWM_AMOUNT = 2;
 
 		/*
 		 * Motor controller
 		 */
-		static const uint8_t MC_MOTOR_AMOUNT = 1;
+		static const uint8_t MC_MOTOR_AMOUNT = 4;
 
 	};
 
 	struct ChannelCalibration
 	{
-		uint16_t min, max, deadband;
+		uint16_t min, max, mid, deadband;
 
 		ChannelCalibration()
 		{
 			min = 1050;
+			mid = 1500;
 			max = 1950;
 			deadband = 30;
 		}
@@ -61,11 +62,6 @@ public:
 	 * Serial interface
 	 */
 	uint32_t SR_BAUD_RATE;
-
-	/*
-	 * Radio receiver
-	 */
-	uint16_t RX_SIGNAL_MID;
 
 	ChannelCalibration RX_CHANNEL_CALIBRATION[16];
 

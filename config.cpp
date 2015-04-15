@@ -36,7 +36,7 @@ void Config::LoadDefaults()
 	/*
 	 * Radio receiver
 	 */
-	RX_SIGNAL_MID				= 1500;			// The signal the receiver sees as neutral
+	
 
 	/*
 	 * Motion sensor

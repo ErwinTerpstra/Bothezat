@@ -37,16 +37,16 @@ void Receiver::Debug() const
 // Returns a normalized, calibrated channel in the -1.0 ... 1.0f range
 float Receiver::NormalizedChannel(Channel channel) const
 {
-	Config::ChannelCalibration& calibration = config.RX_CHANNEL_CALIBRATION[channel];
-	int16_t offset = channels[channel] - config.RX_SIGNAL_MID;
+	const Config::ChannelCalibration& calibration = config.RX_CHANNEL_CALIBRATION[channel];
+	int16_t offset = channels[channel] - calibration.mid;
 
 	if (abs(offset) < calibration.deadband)
 		return 0.0f;
 
 	if (offset > 0)
-		return offset / (float) (calibration.max - config.RX_SIGNAL_MID);
+		return offset / (float) (calibration.max - calibration.mid);
 	else
-		return offset / (float) (config.RX_SIGNAL_MID - calibration.min);
+		return offset / (float) (calibration.mid - calibration.min);
 }
 
 void Receiver::UpdateChannels(uint16_t* input)

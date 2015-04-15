@@ -22,7 +22,21 @@ public:
 		Vector3 weights;
 	};
 
+	struct PID
+	{
+		// PID coëfficients
+		float kp;
+		float ki;
+		float kd;
+
+		float integratedError;
+		float lastError;
+	};
+
 	Motor motors[Config::Constants::MC_MOTOR_AMOUNT];
+
+	// PID values for all axes
+	PID pid[3];
 
 protected:
 	MotorController();

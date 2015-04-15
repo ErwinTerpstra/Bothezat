@@ -15,6 +15,8 @@ class PwmReceiver : public Receiver, public Module<PwmReceiver>
 {
 friend class Module<PwmReceiver>;
 
+using Module<PwmReceiver>::config;
+
 public:
 	// Descriptor for a pin with a pwm pulse signal
 	struct SignalPin
@@ -31,7 +33,7 @@ public:
 
 		SignalPin(uint16_t pin, uint16_t debugPin, Channel channel) : 
 				pin(pin), debugPin(debugPin), 
-				channel(channel), pulseLength(0), pulseStart(0), x(false)
+				channel(channel), pulseLength(0), pulseStart(0)
 		{
 			mask = g_APinDescription[pin].ulPin;
 		}

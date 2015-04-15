@@ -16,7 +16,6 @@ MotorController::MotorController()
 		motor.weights = Vector3(-1.0f, 1.0f, 1.0f);
 	}
 
-	/*
 	{
 		// Front-left
 		Motor& motor = motors[1];
@@ -40,7 +39,6 @@ MotorController::MotorController()
 		motor.pin = 9;
 		motor.weights = Vector3(1.0f, -1.0f, 1.0f);
 	}
-	*/
 }
 
 void MotorController::Setup()
@@ -59,7 +57,10 @@ void MotorController::Setup()
 void MotorController::Loop(uint32_t dt)
 {
 	PwmReceiver& receiver = PwmReceiver::Instance();
-	WriteMotor(motors[0], receiver.channels[PwmReceiver::THROTTLE]);
+	WriteMotor(motors[0], receiver.channels[Receiver::THROTTLE]);
+	WriteMotor(motors[1], receiver.channels[Receiver::THROTTLE]);
+	WriteMotor(motors[2], receiver.channels[Receiver::THROTTLE]);
+	WriteMotor(motors[3], receiver.channels[Receiver::THROTTLE]);
 }
 
 void MotorController::WriteMotor(const Motor& motor, uint16_t command)
