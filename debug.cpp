@@ -15,8 +15,8 @@ void Debug::Print(const char* msg, va_list args)
 {
 	vsprintf(buffer, msg, args);
 
-	//SerialInterface::Instance().SendLog(buffer);
-	Serial.print(buffer);
+	SerialInterface::Instance().SendLog(buffer);
+	//Serial.print(buffer);
 }
 
 void Debug::Print(const char* msg, ...)

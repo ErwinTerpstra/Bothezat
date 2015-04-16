@@ -31,6 +31,10 @@ public:
 
 		float integratedError;
 		float lastError;
+
+		PID();
+
+		
 	};
 
 	Motor motors[Config::Constants::MC_MOTOR_AMOUNT];
