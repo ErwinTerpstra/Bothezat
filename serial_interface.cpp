@@ -60,10 +60,10 @@ void SerialInterface::ReadMessages()
 
 		// If there is not enough room for the data in the buffer we try to process the messages that are currently in the buffer
 		// If no messages could be processed this means that the current message is too big for the message buffer
-		// Clear the buffer, discarding the data for the culprit mesasge
+		// Clear the buffer, discarding the data for the culprit message
 		if (messageBuffer.FreeBytes() < chunkSize && ProcessMessages() == 0)
 			PurgeMessageBuffer();
-
+		
 		// Attempt to transfer the newly read data to the message buffer
 		uint32_t bytesWritten = messageBuffer.writeStream.Write(readChunk, chunkSize);
 		assert(bytesWritten == chunkSize);
@@ -225,7 +225,7 @@ bool SerialInterface::SyncMessageStream()
 		// As long as we aren't at a message boundary we can discard the data before the current stream point
 		messageBuffer.Trim();
 
-		uint32_t magic = messageBuffer.readStream.ReadUInt32(true);
+		uint32_t magic = messageBuffer.readStream.ReadUInt32();
 
 		// If the read number conforms to the magic number, we probably are at a message start
 		if (magic == Message::MESSAGE_MAGIC)

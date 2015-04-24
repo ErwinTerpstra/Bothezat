@@ -106,3 +106,8 @@ void MotorController::WritePwm(uint8_t pin, uint16_t dutyCycle)
 	const PinDescription& desc = g_APinDescription[pin];
 	PWMC_SetDutyCycle(PWM_INTERFACE, desc.ulPWMChannel, dutyCycle);
 }
+
+MotorController::PID::PID() : kp(1.0f), ki(1.0f), kd(1.0f), integratedError(0.0f), lastError(0.0f)
+{
+
+}
