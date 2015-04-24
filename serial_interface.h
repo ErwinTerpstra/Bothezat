@@ -139,7 +139,7 @@ private:
 
 			void Serialize(BinaryWriteStream& stream) const
 			{
-				stream.Write(static_cast<uint8_t>(type));
+				stream.Write(static_cast<uint32_t>(type));
 				stream.Write(length);
 				stream.Write(data, length);
 			}
@@ -170,7 +170,7 @@ private:
 
 				// Read all resource types
 				for (uint32_t resourceIdx = 0; resourceIdx < numResources; ++resourceIdx)
-					resources[resourceIdx] = static_cast<Resource::Type>(stream.ReadByte());
+					resources[resourceIdx] = static_cast<Resource::Type>(stream.ReadUInt32());
 
 				return true;
 			}

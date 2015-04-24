@@ -206,7 +206,8 @@ bool SerialInterface::ReadMessageHeaders(Message& message)
 	if (crc != message.crc)
 	{
 		// TODO: error handling?
-		assert(false);
+		//assert(false);
+		SendLog("Invalid CRC received!");
 
 		return false;
 	}
