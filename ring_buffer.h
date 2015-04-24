@@ -65,8 +65,7 @@ public:
 				++bytesRead;
 
 				// Wrap read offset around if it reaches the end of the buffer
-				if (++offset >= this->buffer.size)
-					offset = 0;
+				offset = (offset + 1) % this->buffer.size;
 			}
 
 			// If we want to consume the data, update the internal reading pointer
@@ -113,8 +112,7 @@ public:
 				++bytesWritten;
 
 				// Wrap write offset around if it reaches the end of the buffer
-				if (++offset >= this->buffer.size)
-					offset = 0;
+				offset = (offset + 1) % this->buffer.size;
 
 				// If the write offset is equal to the origin point AFTER incrimation that means the buffer is full
 				// Stop writing so that the user knows to read the buffer first
