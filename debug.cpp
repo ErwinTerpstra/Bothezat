@@ -36,6 +36,6 @@ bool Debug::AssertHandler(const char* code, const char* file, const uint32_t lin
 
 bool Debug::Halt()
 {
-	while(1);
+	//while(1);
 	return true;
 }

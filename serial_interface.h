@@ -28,7 +28,7 @@ private:
 		static const uint32_t MESSAGE_MAGIC = 0xB074E6A7;
 
 		// The size of a complete message, with a zero length payload
-		static const uint32_t HEADER_SIZE = 16;
+		static const uint32_t HEADER_SIZE = 22;
 
 		static const uint32_t MAX_PAYLOAD_LENGTH = 1024 * 4;
 
@@ -80,11 +80,11 @@ private:
 		{
 			// Send the message header data 
 			stream.Write(magic);
-			stream.Write(phase);
-			stream.Write(type);
+			stream.Write(crc);
+			stream.Write((int32_t) phase);
+			stream.Write((int32_t) type);
 			stream.Write(id);
 			stream.Write(payloadLength);
-			stream.Write(crc);
 		}
 
 		uint32_t SerializedSize() const
@@ -101,8 +101,8 @@ private:
 			// Read all the fields into the struct
 			magic  			= stream.ReadUInt32();
 			crc				= stream.ReadUInt32();
-			phase 			= (Message::Phase) stream.ReadUInt32();
-			type 			= (Message::Type) stream.ReadUInt32();
+			phase 			= (Message::Phase) stream.ReadInt32();
+			type 			= (Message::Type) stream.ReadInt32();
 			id 				= stream.ReadUInt32();
 			payloadLength 	= stream.ReadUInt16();
 
@@ -139,7 +139,7 @@ private:
 
 			void Serialize(BinaryWriteStream& stream) const
 			{
-				stream.Write(static_cast<uint32_t>(type));
+				stream.Write(static_cast<int32_t>(type));
 				stream.Write(length);
 				stream.Write(data, length);
 			}
@@ -170,7 +170,7 @@ private:
 
 				// Read all resource types
 				for (uint32_t resourceIdx = 0; resourceIdx < numResources; ++resourceIdx)
-					resources[resourceIdx] = static_cast<Resource::Type>(stream.ReadUInt32());
+					resources[resourceIdx] = static_cast<Resource::Type>(stream.ReadInt32());
 
 				return true;
 			}
@@ -247,6 +247,9 @@ private:
 
 	// The serial port wrapper to use for all communication
 	SerialPort serialPort;
+
+	// Whether the headers have been read for the message that we currently are receiving
+	bool headersRead;
 
 protected:
 	SerialInterface();

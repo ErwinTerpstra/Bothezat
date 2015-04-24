@@ -63,7 +63,7 @@ void SerialInterface::ReadMessages()
 		// Clear the buffer, discarding the data for the culprit message
 		if (messageBuffer.FreeBytes() < chunkSize && ProcessMessages() == 0)
 			PurgeMessageBuffer();
-		
+
 		// Attempt to transfer the newly read data to the message buffer
 		uint32_t bytesWritten = messageBuffer.writeStream.Write(readChunk, chunkSize);
 		assert(bytesWritten == chunkSize);
@@ -78,6 +78,8 @@ uint32_t SerialInterface::ProcessMessages()
 	{
 		ProcessMessage(lastReceivedMessage);
 		++messagesProcessed;
+
+		headersRead = false;
 	}
 
 	return messagesProcessed;
@@ -117,6 +119,8 @@ void SerialInterface::ProcessPageRequest(const Message& requestMessage)
 	// We always respond with the same number of resources, even if some of them are invalid
 	response.numResources = request.numResources;
 
+	Debug::Print("Got page request for %u resources\n", response.numResources);
+
 	// Iterate through each resource in the request 
 	for (uint32_t resourceIdx = 0; resourceIdx < request.numResources; ++resourceIdx)
 	{
@@ -151,6 +155,8 @@ void SerialInterface::ProcessPageRequest(const Message& requestMessage)
 			}
 
 			default:
+				Debug::Print("Invalid resource\n", response.numResources);
+				
 				resource.type = Page::Resource::INVALID_RESOURCE;
 				resource.length = 0;
 				break;
@@ -173,7 +179,7 @@ void SerialInterface::ProcessLogRequest(const Message& requestMessage)
 
 bool SerialInterface::ReadMessage(Message& message)
 {
-	if (!message.headersRead && !ReadMessageHeaders(message))
+	if (!headersRead && !ReadMessageHeaders(message))
 		return false;
 
 	// Check if there is enough data in the buffer for the complete message
@@ -203,36 +209,47 @@ bool SerialInterface::ReadMessageHeaders(Message& message)
 	// Verify CRC the message checksum
 	Util::crc crc = CalculateMessageCRC(message);
 	
-	if (crc != message.crc)
+	if (crc != message.crc && false)
 	{
 		// TODO: error handling?
 		//assert(false);
-		SendLog("Invalid CRC received!");
-
+		Debug::Print("Invalid CRC received!\n");
 		return false;
 	}
-	
-	message.headersRead = true;
+
+	headersRead = true;
 
 	return true;
 }
 
 bool SerialInterface::SyncMessageStream()
 {
+	uint32_t bytesSkipped = 0;
+
 	// Make sure the read buffer is synced with a message boundary
-	while (messageBuffer.readStream.Available() <= sizeof(uint32_t));
+	while (messageBuffer.readStream.Available() >= sizeof(uint32_t))
 	{
 		// As long as we aren't at a message boundary we can discard the data before the current stream point
 		messageBuffer.Trim();
 
-		uint32_t magic = messageBuffer.readStream.ReadUInt32();
+		uint32_t magic = messageBuffer.readStream.ReadUInt32(true);
 
 		// If the read number conforms to the magic number, we probably are at a message start
 		if (magic == Message::MESSAGE_MAGIC)
+		{
+			if (bytesSkipped > 0)
+				Debug::Print("Synced message stream by skipping %u bytes\n", bytesSkipped);
+
 			return true;
+		}
+
+		// Check if there is more data available
+		if (messageBuffer.readStream.Available() == 0)
+			break;
 
 		// Advance one byte and try again
 		messageBuffer.readStream.ReadByte(); 
+		++bytesSkipped;
 	} 
 
 	// Failed to sync, no message bounday present in the read buffer yet
@@ -271,7 +288,7 @@ void SerialInterface::SendResponseMessage(const Message& requestMessage, Seriali
 void SerialInterface::PurgeMessageBuffer()
 {
 	messageBuffer.Clear();
-	lastReceivedMessage.headersRead = false;
+	headersRead = false;
 }
 
 Util::crc SerialInterface::CalculateMessageCRC(const Message& message) const
@@ -280,8 +297,8 @@ Util::crc SerialInterface::CalculateMessageCRC(const Message& message) const
 
 	// Add all the message header fields to the crc
 	crc = Util::UpdateCRC(crc, message.magic);
-	crc = Util::UpdateCRC(crc, (uint8_t) message.phase);
-	crc = Util::UpdateCRC(crc, (uint8_t) message.type);
+	crc = Util::UpdateCRC(crc, (uint32_t) message.phase);
+	crc = Util::UpdateCRC(crc, (uint32_t) message.type);
 	crc = Util::UpdateCRC(crc, message.id);
 	crc = Util::UpdateCRC(crc, message.payloadLength);
 

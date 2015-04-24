@@ -107,18 +107,18 @@ public:
 		//ledController->Loop(dt);
 		flightSystem->Loop(dt);
 		motorController->Loop(dt);
-		//serialInterface->Loop(dt);
+		serialInterface->Loop(dt);
 
 		debugTime += dt;
 
-		if (debugTime >= 500000L)
+		if (debugTime >= 1000000L)
 		{
-			motionSensor->Debug();
-			receiver->Debug();
-			flightSystem->Debug();
-			motorController->Debug();
+			//motionSensor->Debug();
+			//receiver->Debug();
+			//flightSystem->Debug();
+			//motorController->Debug();
 
-			Debug::Print("Last loop time: %dus\n", dt);
+			//Debug::Print("Last loop time: %dus\n", dt);
 			Debug::Print("Uptime: %ds\n", timer->Micros() / 1000000);
 			
 			debugTime = 0;

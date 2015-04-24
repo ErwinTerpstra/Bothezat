@@ -58,7 +58,7 @@ public:
 			uint32_t offset = this->offset;
 
 			// Keep reading until we caught up with the buffer or enough bytes have been read
-			while (offset != this->buffer.writeStream.offset && bytesRead <= length)
+			while (offset != this->buffer.writeStream.offset && bytesRead < length)
 			{
 				// Copy the next byte from the internal buffer to our output buffer
 				buffer[bytesRead] = this->buffer.data[offset];
@@ -106,7 +106,7 @@ public:
 		{
 			uint32_t bytesWritten = 0;
 
-			while (bytesWritten <= length)
+			while (bytesWritten < length)
 			{
 				this->buffer.data[offset] = buffer[bytesWritten];
 				++bytesWritten;
