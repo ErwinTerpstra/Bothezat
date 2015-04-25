@@ -113,12 +113,12 @@ public:
 
 		if (debugTime >= 1000000L)
 		{
-			//motionSensor->Debug();
-			//receiver->Debug();
-			//flightSystem->Debug();
-			//motorController->Debug();
+			motionSensor->Debug();
+			receiver->Debug();
+			flightSystem->Debug();
+			motorController->Debug();
 
-			//Debug::Print("Last loop time: %dus\n", dt);
+			Debug::Print("Last loop time: %dus\n", dt);
 			Debug::Print("Uptime: %ds\n", timer->Micros() / 1000000);
 			
 			debugTime = 0;

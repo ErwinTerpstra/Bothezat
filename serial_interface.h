@@ -37,7 +37,7 @@ private:
 			PHASE_REQUEST 		= 0x00,
 			PHASE_RESPONSE 		= 0x01,
 
-			PHASE_LAST_VALUE	= ENUM_PADDING_VALUE
+			PHASE_LAST_VALUE	= 0xFF
 		};
 
 		enum Type
@@ -46,7 +46,7 @@ private:
 			TYPE_COMMAND 		= 0x02,
 			TYPE_LOG 			= 0x03,
 
-			TYPE_LAST_VALUE 	= ENUM_PADDING_VALUE
+			TYPE_LAST_VALUE 	= 0xFF
 		};
 
 		// A magic number used to sync the stream to the start of a message, should have the value in MESSAGE_MAGIC
@@ -81,15 +81,15 @@ private:
 			// Send the message header data 
 			stream.Write(magic);
 			stream.Write(crc);
-			stream.Write((int32_t) phase);
-			stream.Write((int32_t) type);
+			stream.Write((uint8_t) phase);
+			stream.Write((uint8_t) type);
 			stream.Write(id);
 			stream.Write(payloadLength);
 		}
 
 		uint32_t SerializedSize() const
 		{
-			return sizeof(magic) + sizeof(phase) + sizeof(type) + sizeof(id) + sizeof(payloadLength) + sizeof(crc);
+			return sizeof(magic) + sizeof(uint8_t) + sizeof(uint8_t) + sizeof(id) + sizeof(payloadLength) + sizeof(crc);
 		}
 
 		bool Deserialize(BinaryReadStream& stream)
@@ -101,8 +101,8 @@ private:
 			// Read all the fields into the struct
 			magic  			= stream.ReadUInt32();
 			crc				= stream.ReadUInt32();
-			phase 			= (Message::Phase) stream.ReadInt32();
-			type 			= (Message::Type) stream.ReadInt32();
+			phase 			= (Message::Phase) stream.ReadByte();
+			type 			= (Message::Type) stream.ReadByte();
 			id 				= stream.ReadUInt32();
 			payloadLength 	= stream.ReadUInt16();
 
@@ -121,9 +121,7 @@ private:
 				ORIENTATION 			= 0x01,
 				ACCEL_ORIENTATION 		= 0x02,
 
-				INVALID_RESOURCE 		= 0xFF,
-
-				LAST_VALUE 				= ENUM_PADDING_VALUE
+				INVALID_RESOURCE		= 0xFF
 			};
 
 			Type type;
@@ -139,14 +137,14 @@ private:
 
 			void Serialize(BinaryWriteStream& stream) const
 			{
-				stream.Write(static_cast<int32_t>(type));
+				stream.Write(static_cast<uint8_t>(type));
 				stream.Write(length);
 				stream.Write(data, length);
 			}
 
 			uint32_t SerializedSize() const
 			{
-				return sizeof(type) + sizeof(length) + length;
+				return sizeof(uint8_t) + sizeof(length) + length;
 			}
 		};
 
@@ -165,12 +163,12 @@ private:
 				numResources = stream.ReadUInt32();
 
 				// Make sure there is enough data to read all resource types
-				if (stream.Available() < numResources);
+				if (stream.Available() < numResources)
 					return false;
 
 				// Read all resource types
 				for (uint32_t resourceIdx = 0; resourceIdx < numResources; ++resourceIdx)
-					resources[resourceIdx] = static_cast<Resource::Type>(stream.ReadInt32());
+					resources[resourceIdx] = static_cast<Resource::Type>(stream.ReadByte());
 
 				return true;
 			}
@@ -211,7 +209,7 @@ private:
 			CALIBRATE 				= 0x01,
 			SET_RESOURCE_VALUE 		= 0x02,
 
-			LAST_VALUE 				= ENUM_PADDING_VALUE
+			INVALID_COMMAND			= 0xFF
 		};
 
 		enum State

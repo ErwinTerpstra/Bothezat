@@ -50,7 +50,6 @@ public:
 		pmc_enable_periph_clk(ID_TC0);
 		pmc_enable_periph_clk(ID_TC1);
 		pmc_enable_periph_clk(ID_TC2);
-
 	}
 
 	static Timer* GetFreeTimer()

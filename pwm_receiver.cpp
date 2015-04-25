@@ -17,7 +17,7 @@ PwmReceiver::PwmReceiver() : Receiver(), timer(NULL)
 void PwmReceiver::Setup()
 {
 	// Initialize interrupt channel
-	/*
+	//*
 	pmc_enable_periph_clk(ID_PIOC);
 	NVIC_DisableIRQ(PIOC_IRQn);
 	NVIC_ClearPendingIRQ(PIOC_IRQn);
@@ -56,7 +56,7 @@ void PwmReceiver::Setup()
 
 void PwmReceiver::Loop(uint32_t dt)
 {
-	//*
+	/*
 	ReadRaw();
 	/*/
 
@@ -80,33 +80,13 @@ void PwmReceiver::Loop(uint32_t dt)
 
 void PwmReceiver::HandleISR(uint32_t mask)
 {
-	SignalPin* pin = NULL;
+	uint32_t time = timer->Micros();
 
-	// Iterate through all signal pins to find the one matching this interrupt mask
+	// Iterate through all signal pins the ones matching the interrupt mask
 	for (uint8_t pinIdx = 0; pinIdx < Config::Constants::RX_PWM_AMOUNT; ++pinIdx)
 	{
-		if (mask == signalPins[pinIdx].mask)
-		{
-			pin = &signalPins[pinIdx];
-			break;
-		}
-	}
-
-	// No signal pin mapped to the interrupt pin
-	if (pin == NULL)
-		return;
-
-	if (digitalRead(pin->pin))
-	{
-		// Start of pulse, save pulse start time
-		pin->pulseStart = timer->Micros();
-		digitalWrite(pin->debugPin, HIGH);
-	}
-	else
-	{
-		// End of pulse, save pulse length
-		pin->pulseLength = timer->Micros() - pin->pulseStart;
-		digitalWrite(pin->debugPin, LOW);
+		if ((mask & signalPins[pinIdx].mask) != 0)
+			signalPins[pinIdx].HandleChange(time);
 	}
 }
 

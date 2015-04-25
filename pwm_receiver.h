@@ -52,6 +52,28 @@ public:
 
 			return *this;
 		}
+
+		void HandleChange(uint32_t time)
+		{
+			if (digitalRead(pin))
+			{
+				// Start of pulse, save pulse start time
+				pulseStart = time;
+				digitalWrite(debugPin, HIGH);
+			}
+			else
+			{
+				// End of pulse, save pulse length
+				
+				// Check for overflow
+				if (time < pulseStart)
+					pulseLength = 0xffffffff - pulseStart + time;
+				else
+					pulseLength = time - pulseStart;
+
+				digitalWrite(debugPin, LOW);
+			}
+		}
 	};
 
 private:
@@ -66,6 +88,8 @@ public:
 	virtual void Setup();
 
 	virtual void Loop(uint32_t dt);
+
+	void SetTimer(Timer* timer) { this->timer = timer; }
 
 	void HandleISR(uint32_t mask);
 

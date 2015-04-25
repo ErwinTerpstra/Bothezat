@@ -67,6 +67,7 @@ void SerialInterface::ReadMessages()
 		// Attempt to transfer the newly read data to the message buffer
 		uint32_t bytesWritten = messageBuffer.writeStream.Write(readChunk, chunkSize);
 		assert(bytesWritten == chunkSize);
+
 	}
 }
 
@@ -114,12 +115,16 @@ void SerialInterface::ProcessPageRequest(const Message& requestMessage)
 
 	// Deserialize the request struct from the payload
 	MemoryStream stream(requestMessage.payload, requestMessage.payloadLength);
-	request.Deserialize(stream);
+	bool result = request.Deserialize(stream);
+
+	if (!result)
+	{
+		Debug::Print("Failed to deserialize page request!");
+		return;
+	}
 
 	// We always respond with the same number of resources, even if some of them are invalid
 	response.numResources = request.numResources;
-
-	Debug::Print("Got page request for %u resources\n", response.numResources);
 
 	// Iterate through each resource in the request 
 	for (uint32_t resourceIdx = 0; resourceIdx < request.numResources; ++resourceIdx)
@@ -154,9 +159,7 @@ void SerialInterface::ProcessPageRequest(const Message& requestMessage)
 				break;
 			}
 
-			default:
-				Debug::Print("Invalid resource\n", response.numResources);
-				
+			default:				
 				resource.type = Page::Resource::INVALID_RESOURCE;
 				resource.length = 0;
 				break;
@@ -279,7 +282,7 @@ void SerialInterface::SendResponseMessage(const Message& requestMessage, Seriali
 	responseMessage.crc 			= CalculateMessageCRC(responseMessage);
 
 	// Serialize the message headers to the serial port
-	requestMessage.Serialize(serialPort);
+	responseMessage.Serialize(serialPort);
 
 	// Serialize the message payload to the serial port
 	payload.Serialize(serialPort);
@@ -289,6 +292,8 @@ void SerialInterface::PurgeMessageBuffer()
 {
 	messageBuffer.Clear();
 	headersRead = false;
+
+	Debug::Print("Purging message buffer!\n");
 }
 
 Util::crc SerialInterface::CalculateMessageCRC(const Message& message) const
