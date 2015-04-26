@@ -44,7 +44,7 @@ void Config::LoadDefaults()
 	MS_CALIBRATION_SAMPLES		= 10;			// Amount of samples for IMU
 	MS_CALIBRATION_INTERVAL		= 100;			// Time between IMU calibration samples
 	MS_GYRO_FILTER_RC			= 2.5f;			// RC for gyro high pass filter
-	MS_ACCEL_CORRECTION_RC		= 0.001f;		// Lower means slower correction to gyro by accelerometer
+	MS_ACCEL_CORRECTION_RC		= 0.0002f;		// Lower means slower correction to gyro by accelerometer
 	MS_ACCEL_MAX				= 0.15f;		// Accelerometer values with a larger deviation from 1G than this will get discarded
 
 	/*
@@ -58,7 +58,13 @@ void Config::LoadDefaults()
 	/*
 	 * Motor controller
 	 */
-	MC_PWM_FREQUENCY			= 488;
+	MC_PWM_FREQUENCY			= 50;
+	MC_PWM_PERIOD				= 20000;
 	MC_PWM_MIN_COMMAND			= 950;
+	MC_PWM_MIN_OUTPUT			= 1100;
 	MC_PWM_MAX_COMMAND			= 2050;
+
+	MC_PID_CONFIGURATION[0] 	= PidConfiguration(1.0f, 0.005f, 1.0f);
+	MC_PID_CONFIGURATION[1] 	= PidConfiguration(1.0f, 0.005f, 1.0f);
+	MC_PID_CONFIGURATION[2] 	= PidConfiguration(1.0f, 0.005f, 1.0f);
 }

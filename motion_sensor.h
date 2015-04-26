@@ -26,6 +26,9 @@ private:
 	Quaternion orientation, accelOrientation;
 	Vector3 angularVelocity, acceleration;
 
+	Filter<Vector3> accelerationFilter;
+	Filter<Vector3> angularVelocityFilter;
+
 protected:
 	MotionSensor();
 

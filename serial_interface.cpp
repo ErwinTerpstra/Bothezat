@@ -302,8 +302,8 @@ Util::crc SerialInterface::CalculateMessageCRC(const Message& message) const
 
 	// Add all the message header fields to the crc
 	crc = Util::UpdateCRC(crc, message.magic);
-	crc = Util::UpdateCRC(crc, (uint32_t) message.phase);
-	crc = Util::UpdateCRC(crc, (uint32_t) message.type);
+	crc = Util::UpdateCRC(crc, (uint8_t) message.phase);
+	crc = Util::UpdateCRC(crc, (uint8_t) message.type);
 	crc = Util::UpdateCRC(crc, message.id);
 	crc = Util::UpdateCRC(crc, message.payloadLength);
 

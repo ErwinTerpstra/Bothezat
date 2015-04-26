@@ -53,6 +53,21 @@ public:
 		}
 	};
 
+	struct PidConfiguration
+	{
+		float kp, ki, kd;
+		
+		PidConfiguration() : kp(1.0f), ki(1.0f), kd(1.0f)
+		{
+
+		}
+
+		PidConfiguration(float kp, float ki, float kd) : kp(kp), ki(ki), kd(kd)
+		{
+
+		}
+	};
+
 	/*
 	 * System
 	 */
@@ -93,9 +108,15 @@ public:
 	 */
 	uint32_t MC_PWM_FREQUENCY;
 
+	uint16_t MC_PWM_PERIOD;
+
 	uint16_t MC_PWM_MIN_COMMAND;
 
+	uint16_t MC_PWM_MIN_OUTPUT;
+
 	uint16_t MC_PWM_MAX_COMMAND;
+
+	PidConfiguration MC_PID_CONFIGURATION[3];
 
 private:
 	Config();

@@ -59,6 +59,9 @@ public:
 		Debug::Print("======== Bothezat ========\n");
 		Debug::Print("Initializing...\n");
 
+		// Allow the user some time to settle the model
+		delay(2000);
+
 		// Initialize timer
 		Timer::EnableTimers();
 
@@ -113,9 +116,9 @@ public:
 
 		if (debugTime >= 1000000L)
 		{
-			motionSensor->Debug();
+			//motionSensor->Debug();
 			receiver->Debug();
-			flightSystem->Debug();
+			//flightSystem->Debug();
 			motorController->Debug();
 
 			Debug::Print("Last loop time: %dus\n", dt);

@@ -30,6 +30,7 @@ public:
 	virtual void Debug() const;
 
 	void SwitchMode(FlightMode* newMode);
+	const FlightMode& CurrentMode() { return *currentMode; }
 
 };
 

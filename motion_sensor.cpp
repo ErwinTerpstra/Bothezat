@@ -11,7 +11,8 @@ using namespace bothezat;
 
 MotionSensor::MotionSensor() : 
 	orientation(), accelOrientation(), acceleration(), angularVelocity(),
-	gyroOffset(), gyroRange(0), accelRange(0), gyroScale(1.0f), accelScale(1.0f)
+	gyroOffset(), gyroRange(0), accelRange(0), gyroScale(1.0f), accelScale(1.0f),
+	angularVelocityFilter(Filter<Vector3>::HIGH_PASS, 0.1f), accelerationFilter(Filter<Vector3>::LOW_PASS, 0.1f)
 {
 	
 }
@@ -33,6 +34,9 @@ void MotionSensor::Loop(uint32_t dt)
 	// Convert raw data to scaled and calibrated data
 	ReadGyro(angularVelocity);
 	ReadAcceleration(acceleration);
+
+	angularVelocity = angularVelocityFilter.Sample(angularVelocity, deltaSeconds);
+	acceleration = accelerationFilter.Sample(acceleration, deltaSeconds);
 
 	// Convert axis rotations to quaternion
 	Quaternion rotation = Quaternion::FromEulerAngles(rotation,

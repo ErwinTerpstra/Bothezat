@@ -14,6 +14,7 @@ struct Vector3
 	{
 		struct { float x, y, z; };
 		struct { float pitch, yaw, roll; };
+		struct { float axes[3]; };
 	};
 
 	Vector3() : x(0.0f), y(0.0f), z(0.0f)
@@ -58,6 +59,16 @@ struct Vector3
 
 	__inline float LengthSq() const { return x * x + y * y + z * z; }
 	float Length() const { return sqrt(LengthSq()); }
+
+	const float& operator[](const int index) const
+	{
+		return axes[index];
+	}
+	
+	float& operator[](const int index)
+	{
+		return axes[index];
+	}
 
 	Vector3& operator=(const Vector3& other)
 	{
