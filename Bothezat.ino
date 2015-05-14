@@ -112,6 +112,8 @@ public:
 		motorController->Loop(dt);
 		serialInterface->Loop(dt);
 
+		#ifdef BOTH_DEBUG
+
 		debugTime += dt;
 
 		if (debugTime >= 1000000L)
@@ -126,6 +128,8 @@ public:
 			
 			debugTime = 0;
 		}
+
+		#endif // BOTH_DEBUG
 
 		loopEnd = timer->Micros();
 

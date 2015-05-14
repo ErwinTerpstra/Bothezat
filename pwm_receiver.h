@@ -59,7 +59,10 @@ public:
 			{
 				// Start of pulse, save pulse start time
 				pulseStart = time;
-				digitalWrite(debugPin, HIGH);
+				
+				#ifdef BOTH_DEBUG
+					digitalWrite(debugPin, HIGH);
+				#endif
 			}
 			else
 			{
@@ -71,7 +74,9 @@ public:
 				else
 					pulseLength = time - pulseStart;
 
-				digitalWrite(debugPin, LOW);
+				#ifdef BOTH_DEBUG
+					digitalWrite(debugPin, LOW);
+				#endif
 			}
 		}
 	};

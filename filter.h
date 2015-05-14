@@ -48,6 +48,8 @@ public:
 		return previousFiltered;
 	}
 
+	void SetRC(float rc) { this->rc = rc; }
+
 	__inline float Alpha(float dt) const { return rc / (rc + dt); }
 
 	__inline T PassThroughFilter(T input, float alpha)

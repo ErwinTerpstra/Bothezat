@@ -23,5 +23,7 @@
 #include "vector3.h"
 #include "quaternion.h"
 
+#define BOTH_DEBUG
+
 
 #endif

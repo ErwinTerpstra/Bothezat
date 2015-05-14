@@ -16,6 +16,7 @@ void Debug::Print(const char* msg, va_list args)
 	vsprintf(buffer, msg, args);
 
 	SerialInterface::Instance().SendLog(buffer);
+	
 	//Serial.print(buffer);
 }
 
@@ -36,6 +37,9 @@ bool Debug::AssertHandler(const char* code, const char* file, const uint32_t lin
 
 bool Debug::Halt()
 {
-	//while(1);
+	#ifdef BOTH_DEBUG
+		while(1);
+	#endif
+
 	return true;
 }
