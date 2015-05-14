@@ -23,6 +23,8 @@
 #include "vector3.h"
 #include "quaternion.h"
 
+#include "page.h"
+
 #define BOTH_DEBUG
 
 

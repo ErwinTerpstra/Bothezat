@@ -10,8 +10,8 @@ PwmReceiver::PwmReceiver() : Receiver(), timer(NULL)
 {
 	signalPins[0] = SignalPin(48, 40, Receiver::CHANNEL1);
 	signalPins[1] = SignalPin(49, 41, Receiver::CHANNEL2);
-	signalPins[2] = SignalPin(50, 42, Receiver::CHANNEL3);
-	signalPins[3] = SignalPin(51, 43, Receiver::CHANNEL4);
+	//signalPins[2] = SignalPin(50, 42, Receiver::CHANNEL3);
+	//signalPins[3] = SignalPin(51, 43, Receiver::CHANNEL4);
 }
 
 void PwmReceiver::Setup()
@@ -34,12 +34,15 @@ void PwmReceiver::Setup()
 		// Configure pin as input
 		PIO_Configure(desc.pPort, PIO_INPUT, desc.ulPin, 0);
 
+#ifdef BOTH_DEBUG
 		pinMode(pin.debugPin, OUTPUT);
+#endif
 
 		// Enable interrupt on each edge change
 		desc.pPort->PIO_AIMDR = pin.mask;
 		desc.pPort->PIO_IER = pin.mask;
 	}
+	
 	/*/
 	for (uint8_t pinIdx = 0; pinIdx < Config::Constants::RX_PWM_AMOUNT; ++pinIdx)
 		pinMode(Config::Pins::RX_PWM + pinIdx, INPUT);

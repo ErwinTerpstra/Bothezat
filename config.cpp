@@ -34,7 +34,7 @@ void Config::LoadDefaults()
 	SR_BAUD_RATE 				= 115200; 		// Baud rate for serial communication
 
 	/*
-	 * Radio receiver
+	 * Radio receiver 
 	 */
 	
 

@@ -3,11 +3,13 @@
 
 #include "debug.h"
 
+#include "binary_stream.h"
+
 namespace bothezat
 {
 
 
-struct Vector3
+struct Vector3 : public Serializable, public Deserializable
 {
 	// Union that allows use of vector type as euler rotation container
 	union
@@ -124,6 +126,25 @@ struct Vector3
 		char format[64];
 		sprintf(format, "%%.%df;%%.%df;%%.%df;\n", precision, precision, precision);
 		Debug::Print(format, x, y, z);
+	}
+
+	void Serialize(BinaryWriteStream& stream) const
+	{
+		stream.Write(x);
+		stream.Write(y);
+		stream.Write(z);
+	}
+
+	uint32_t SerializedSize() const { return sizeof(float) * 3; }
+
+	bool Deserialize(BinaryReadStream& stream)
+	{
+		if (stream.Available() < SerializedSize())
+			return false;
+
+		x = stream.ReadFloat();
+		y = stream.ReadFloat();
+		z = stream.ReadFloat();
 	}
 
 	static float Angle(const Vector3& a, const Vector3& b)

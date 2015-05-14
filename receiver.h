@@ -5,13 +5,15 @@
 
 #include "module.h"
 
+#include "page.h"
+
 namespace bothezat
 {
 	
 /*
  *	Base class for radio receivers
  */
-class Receiver 
+class Receiver : public ResourceProvider
 {
 public:
 	enum Channel
@@ -57,11 +59,9 @@ protected:
 	void SetSpektrumMapping();
 	
 public:
-
-	virtual void Setup() = 0;
-	virtual void Loop(uint32_t dt) = 0;
-
 	virtual void Debug() const;
+
+	virtual uint16_t SerializeResource(Page::Resource::Type type, BinaryWriteStream& stream);
 
 	bool IsConnected() const;
 

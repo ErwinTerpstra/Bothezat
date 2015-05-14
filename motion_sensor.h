@@ -11,7 +11,7 @@
 namespace bothezat
 {
 	
-class MotionSensor : public Module<MotionSensor>
+class MotionSensor : public Module<MotionSensor>, public ResourceProvider
 {
 friend class Module<MotionSensor>;
 
@@ -37,6 +37,8 @@ public:
 	virtual void Setup();
 	virtual void Loop(uint32_t dt);
 	virtual void Debug() const;
+
+	virtual uint16_t SerializeResource(Page::Resource::Type type, BinaryWriteStream& stream);
 
 	void Calibrate();
 

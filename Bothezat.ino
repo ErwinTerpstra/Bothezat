@@ -75,11 +75,13 @@ public:
 		motorController = &MotorController::Instance();
 
 		// Initialize modules
-		motionSensor->Setup();
 		receiver->Setup();
+		motionSensor->Setup();
 		flightSystem->Setup();
 		//ledController->Setup();
 		motorController->Setup();
+
+		RegisterResourceProviders();
 
 		timer = Timer::GetFreeTimer();
 
@@ -95,6 +97,18 @@ public:
 		Debug::Print("Initialization complete!\n");
 	}
 
+	void RegisterResourceProviders()
+	{
+		serialInterface->RegisterResourceProvider(Page::Resource::ORIENTATION, 			motionSensor);
+		serialInterface->RegisterResourceProvider(Page::Resource::ACCEL_ORIENTATION, 	motionSensor);
+		serialInterface->RegisterResourceProvider(Page::Resource::ACCELERATION, 		motionSensor);
+		serialInterface->RegisterResourceProvider(Page::Resource::ANGULAR_VELOCITY, 	motionSensor);
+
+		serialInterface->RegisterResourceProvider(Page::Resource::RECEIVER_CHANNELS, 	receiver);
+		serialInterface->RegisterResourceProvider(Page::Resource::RECEIVER_NORMALIZED, 	receiver);
+		serialInterface->RegisterResourceProvider(Page::Resource::RECEIVER_CONNECTED,	receiver);
+	}
+
 	void Loop()
 	{
 		loopStart = timer->Micros();
@@ -105,8 +119,8 @@ public:
 		
 		lastLoopStart = loopStart;
 
-		motionSensor->Loop(dt);
 		receiver->Loop(dt);
+		motionSensor->Loop(dt);
 		//ledController->Loop(dt);
 		flightSystem->Loop(dt);
 		motorController->Loop(dt);
@@ -119,8 +133,8 @@ public:
 		if (debugTime >= 1000000L)
 		{
 			//motionSensor->Debug();
-			receiver->Debug();
-			//flightSystem->Debug();
+			//receiver->Debug();
+			flightSystem->Debug();
 			motorController->Debug();
 
 			Debug::Print("Last loop time: %dus\n", dt);

@@ -10,7 +10,9 @@ using namespace bothezat;
 
 SerialInterface::SerialInterface() : payloadBuffer(NULL), serialPort(SerialPort::Instance())
 {
-	
+	// Initialize all resource providers to NULL
+	for (uint16_t idx = 0; idx < 256; ++idx)
+		resourceProviders[idx] = NULL;
 }
 
 SerialInterface::~SerialInterface()
@@ -36,6 +38,11 @@ void SerialInterface::Loop(uint32_t dt)
 {
 	ReadMessages();
 	ProcessMessages();
+}
+
+void SerialInterface::RegisterResourceProvider(Page::Resource::Type type, ResourceProvider* provider)
+{
+	resourceProviders[type] = provider;
 }
 
 void SerialInterface::SendLog(const char* msg)
@@ -132,42 +139,33 @@ void SerialInterface::ProcessPageRequest(const Message& requestMessage)
 		Page::Resource::Type type = request.resources[resourceIdx];
 		Page::Resource& resource = response.resources[resourceIdx];
 
-		// TODO: Move this to a generic resource retrieve pattern
-		switch (type)
+		// Search for a resource provider registered for this type
+		ResourceProvider* resourceProvider = resourceProviders[type];
+
+		if (resourceProvider != NULL)
 		{
-			case Page::Resource::ORIENTATION:
-			{
-				Quaternion orientation = MotionSensor::Instance().CurrentOrientation();
+			// Set the data pointer of the resource to the current position of the write stream
+			resource.data = resourceBuffer.writeStream.DataPointer();
+			resource.length = resourceProvider->SerializeResource(type, resourceBuffer.writeStream);
 
-				resource.type = type;
-				resource.length = orientation.SerializedSize();
-
-				resource.data = resourceBuffer.writeStream.DataPointer();
-				orientation.Serialize(resourceBuffer.writeStream);
-				break;
-			}
-
-			case Page::Resource::ACCEL_ORIENTATION:
-			{
-				Quaternion accelOrientation = MotionSensor::Instance().AccelerometerOrientation();
-
-				resource.type = type;
-				resource.length = accelOrientation.SerializedSize();
-
-				resource.data = resourceBuffer.writeStream.DataPointer();
-				accelOrientation.Serialize(resourceBuffer.writeStream);
-				break;
-			}
-
-			default:				
+			// If the provider couldn't supply the resource, we handle it as an invalid type
+			if (resource.length == 0)
 				resource.type = Page::Resource::INVALID_RESOURCE;
-				resource.length = 0;
-				break;
+			else
+				resource.type = type;
 		}
+		else
+		{
+			resource.length = 0;
+			resource.type = Page::Resource::INVALID_RESOURCE;
+		}
+
 	}
 
 	// Send a response message with our response struct as payload
 	SendResponseMessage(requestMessage, response);
+
+	resourceBuffer.Clear();
 }
 
 void SerialInterface::ProcessCommandRequest(const Message& requestMessage)

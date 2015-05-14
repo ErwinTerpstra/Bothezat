@@ -27,6 +27,30 @@ void Receiver::SetSpektrumMapping()
 	mapping[Receiver::CHANNEL4] = Receiver::RUDDER;
 }
 
+uint16_t Receiver::SerializeResource(Page::Resource::Type type, BinaryWriteStream& stream)
+{
+	switch (type)
+	{
+		case Page::Resource::RECEIVER_CHANNELS:
+			for (uint8_t channel = 0; channel < MAX_CHANNELS; ++channel)
+				stream.Write(channels[channel]);
+
+			return sizeof(uint16_t) * MAX_CHANNELS;
+
+		case Page::Resource::RECEIVER_NORMALIZED:
+			for (uint8_t channel = 0; channel < MAX_CHANNELS; ++channel)
+				stream.Write(NormalizedChannel(channels[channel]));
+
+			return sizeof(float) * MAX_CHANNELS;
+
+		case Page::Resource::RECEIVER_CONNECTED:
+			stream.Write(connected);
+			return 1;
+	}
+
+	return 0;
+}
+
 void Receiver::Debug() const
 {
 	Debug::Print("Channels:\n");

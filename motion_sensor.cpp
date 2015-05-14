@@ -72,6 +72,34 @@ void MotionSensor::Loop(uint32_t dt)
 	}
 }
 
+uint16_t MotionSensor::SerializeResource(Page::Resource::Type type, BinaryWriteStream& stream)
+{
+	switch (type)
+	{
+		case Page::Resource::ORIENTATION:
+			orientation.Serialize(stream);
+
+			return orientation.SerializedSize();
+
+		case Page::Resource::ACCEL_ORIENTATION:
+			accelOrientation.Serialize(stream);
+
+			return accelOrientation.SerializedSize();
+
+		case Page::Resource::ACCELERATION:
+			acceleration.Serialize(stream);
+
+			return acceleration.SerializedSize();
+
+		case Page::Resource::ANGULAR_VELOCITY:
+			acceleration.Serialize(stream);
+
+			return acceleration.SerializedSize();
+	} 
+
+	return 0;
+}
+
 void MotionSensor::Debug() const
 {
 	float yaw, pitch, roll;

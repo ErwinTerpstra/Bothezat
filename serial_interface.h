@@ -110,98 +110,6 @@ private:
 		}
 	};
 
-	struct Page
-	{
-		static const uint32_t MAX_RESOURCES_PER_PAGE = 32;
-
-		struct Resource : public Serializable
-		{
-			enum Type
-			{
-				ORIENTATION 			= 0x01,
-				ACCEL_ORIENTATION 		= 0x02,
-
-				INVALID_RESOURCE		= 0xFF
-			};
-
-			Type type;
-
-			uint32_t length;
-
-			const uint8_t* data;
-
-			Resource() : type(INVALID_RESOURCE), length(0), data(NULL)
-			{
-
-			}
-
-			void Serialize(BinaryWriteStream& stream) const
-			{
-				stream.Write(static_cast<uint8_t>(type));
-				stream.Write(length);
-				stream.Write(data, length);
-			}
-
-			uint32_t SerializedSize() const
-			{
-				return sizeof(uint8_t) + sizeof(length) + length;
-			}
-		};
-
-		struct RequestMessage : public Deserializable
-		{
-			uint32_t numResources;
-
-			Resource::Type resources[MAX_RESOURCES_PER_PAGE];
-
-			bool Deserialize(BinaryReadStream& stream)
-			{
-				// Make sure there is enough data to start in the stream
-				if (stream.Available() < sizeof(numResources))
-					return false;
-
-				numResources = stream.ReadUInt32();
-
-				// Make sure there is enough data to read all resource types
-				if (stream.Available() < numResources)
-					return false;
-
-				// Read all resource types
-				for (uint32_t resourceIdx = 0; resourceIdx < numResources; ++resourceIdx)
-					resources[resourceIdx] = static_cast<Resource::Type>(stream.ReadByte());
-
-				return true;
-			}
-		};
-
-		struct ResponseMessage : public Serializable
-		{
-			uint32_t numResources;
-
-			Resource resources[MAX_RESOURCES_PER_PAGE];
-
-			void Serialize(BinaryWriteStream& stream) const
-			{
-				stream.Write(numResources);
-
-				// Serialize all the resources to the stream
-				for (uint32_t resourceIdx = 0; resourceIdx < numResources; ++resourceIdx)
-					resources[resourceIdx].Serialize(stream);
-			}
-
-			uint32_t SerializedSize() const
-			{
-				uint32_t size = sizeof(numResources);
-
-				for (uint32_t resourceIdx = 0; resourceIdx < numResources; ++resourceIdx)
-					size += resources[resourceIdx].SerializedSize();
-
-				return size;
-			}
-		};
-
-	};
-
 	struct Command
 	{
 		enum Type 
@@ -234,6 +142,8 @@ private:
 	// Intermediate buffer for reading serial data. Data is read to this buffer and then transferred to the larger ring buffer
 	uint8_t readChunk[READ_CHUNK_SIZE];
 
+	ResourceProvider* resourceProviders[256];
+
 	RingBuffer messageBuffer;
 	RingBuffer resourceBuffer;
 
@@ -257,6 +167,8 @@ public:
 
 	virtual void Setup();
 	virtual void Loop(uint32_t dt);
+
+	void RegisterResourceProvider(Page::Resource::Type type, ResourceProvider* provider);
 
 	void SendLog(const char* msg);
 

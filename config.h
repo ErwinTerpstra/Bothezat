@@ -31,7 +31,7 @@ public:
 		/*
 		 *	Radio receiver
 		 */
-		static const uint8_t RX_PWM_AMOUNT = 4;
+		static const uint8_t RX_PWM_AMOUNT = 2;
 
 		/*
 		 * Motor controller
