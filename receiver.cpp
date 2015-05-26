@@ -39,7 +39,7 @@ uint16_t Receiver::SerializeResource(Page::Resource::Type type, BinaryWriteStrea
 
 		case Page::Resource::RECEIVER_NORMALIZED:
 			for (uint8_t channel = 0; channel < MAX_CHANNELS; ++channel)
-				stream.Write(NormalizedChannel(channels[channel]));
+				stream.Write(NormalizedChannel(static_cast<Channel>(channel)));
 
 			return sizeof(float) * MAX_CHANNELS;
 

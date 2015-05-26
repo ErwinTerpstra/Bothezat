@@ -18,7 +18,7 @@ class Receiver : public ResourceProvider
 public:
 	enum Channel
 	{
-		// All available RC channels, if more should be read the need to be added below
+		// All available RC channels, if more should be read they need to be added below
 		AILERON,
 		ELEVATOR,
 		THROTTLE,
@@ -59,6 +59,10 @@ protected:
 	void SetSpektrumMapping();
 	
 public:
+	virtual void Setup() = 0;
+
+	virtual void Loop(uint32_t dt) = 0;
+
 	virtual void Debug() const;
 
 	virtual uint16_t SerializeResource(Page::Resource::Type type, BinaryWriteStream& stream);
