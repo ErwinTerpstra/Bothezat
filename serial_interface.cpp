@@ -126,12 +126,14 @@ void SerialInterface::ProcessPageRequest(const Message& requestMessage)
 
 	if (!result)
 	{
-		Debug::Print("Failed to deserialize page request!");
+		Debug::Print("Failed to deserialize page request!\n");
 		return;
 	}
 
 	// We always respond with the same number of resources, even if some of them are invalid
 	response.numResources = request.numResources;
+
+	resourceBuffer.Clear();
 
 	// Iterate through each resource in the request 
 	for (uint32_t resourceIdx = 0; resourceIdx < request.numResources; ++resourceIdx)
@@ -145,6 +147,7 @@ void SerialInterface::ProcessPageRequest(const Message& requestMessage)
 		if (resourceProvider != NULL)
 		{
 			// Set the data pointer of the resource to the current position of the write stream
+			// TODO: Check if the resource fits in the buffer
 			resource.data = resourceBuffer.writeStream.DataPointer();
 			resource.length = resourceProvider->SerializeResource(type, resourceBuffer.writeStream);
 
@@ -164,8 +167,6 @@ void SerialInterface::ProcessPageRequest(const Message& requestMessage)
 
 	// Send a response message with our response struct as payload
 	SendResponseMessage(requestMessage, response);
-
-	resourceBuffer.Clear();
 }
 
 void SerialInterface::ProcessCommandRequest(const Message& requestMessage)

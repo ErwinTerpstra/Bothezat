@@ -2,6 +2,7 @@
 // Arduino tool chain sucks..
 #include <Wire.h>
 #include <Adafruit_NeoPixel.h>
+#include <DueFlashStorage.h>
 
 #include "bothezat.h"
 
@@ -47,7 +48,10 @@ public:
 
 	void Setup()
 	{		
-		config.ReadEEPROM();
+		bool configLoaded = config.ReadEEPROM();
+
+		if (!configLoaded)
+			config.LoadDefaults();
 
 		Util::Init();
 		I2C::Setup();
@@ -57,7 +61,11 @@ public:
 		serialInterface->Setup();
 
 		Debug::Print("======== Bothezat ========\n");
-		Debug::Print("Initializing...\n");
+
+		if (!configLoaded)
+			Debug::Print("No config found, proceeding with default values\n");
+
+		Debug::Print("Config version is: %u\n", config.VERSION);
 
 		// Allow the user some time to settle the model
 		delay(2000);
@@ -99,6 +107,8 @@ public:
 
 	void RegisterResourceProviders()
 	{
+		serialInterface->RegisterResourceProvider(Page::Resource::CONFIG, 				&config);
+
 		serialInterface->RegisterResourceProvider(Page::Resource::ORIENTATION, 			motionSensor);
 		serialInterface->RegisterResourceProvider(Page::Resource::ACCEL_ORIENTATION, 	motionSensor);
 		serialInterface->RegisterResourceProvider(Page::Resource::ACCELERATION, 		motionSensor);
@@ -106,6 +116,7 @@ public:
 
 		serialInterface->RegisterResourceProvider(Page::Resource::RECEIVER_CHANNELS, 	receiver);
 		serialInterface->RegisterResourceProvider(Page::Resource::RECEIVER_NORMALIZED, 	receiver);
+		serialInterface->RegisterResourceProvider(Page::Resource::RECEIVER_CONNECTED,	receiver);
 		serialInterface->RegisterResourceProvider(Page::Resource::RECEIVER_CONNECTED,	receiver);
 	}
 
@@ -134,11 +145,11 @@ public:
 		{
 			//motionSensor->Debug();
 			//receiver->Debug();
-			flightSystem->Debug();
-			motorController->Debug();
+			//flightSystem->Debug();
+			//motorController->Debug();
 
 			Debug::Print("Last loop time: %dus\n", dt);
-			Debug::Print("Uptime: %ds\n", timer->Micros() / 1000000);
+			//Debug::Print("Uptime: %ds\n", timer->Micros() / 1000000);
 			
 			debugTime = 0;
 		}

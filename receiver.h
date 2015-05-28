@@ -26,8 +26,6 @@ public:
 		AUX1, AUX2,
 		AUX3, AUX4,
 
-		MAX_CHANNELS,
-
 		// Generalization of default order
 		// These are used for easy channel mapping
 		CHANNEL1 = AILERON,
@@ -41,10 +39,10 @@ public:
 	};
 
 	// Values of all channels as last set in UpdateChannels()
-	uint16_t channels[MAX_CHANNELS];
+	uint16_t channels[Config::Constants::RX_MAX_CHANNELS];
 
 	// Mapping of input signals and the way signals are saved in UpdateChannels
-	Channel mapping[MAX_CHANNELS];
+	Channel mapping[Config::Constants::RX_MAX_CHANNELS];
 
 private:
 	static Receiver* currentReceiver;

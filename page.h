@@ -14,6 +14,9 @@ struct Page
 	{
 		enum Type
 		{
+			// System
+			CONFIG 					= 0x01,
+			
 			// Motion sensor
 			ORIENTATION 			= 0x10,
 			ACCEL_ORIENTATION 		= 0x11,
@@ -121,6 +124,35 @@ public:
 	virtual uint16_t SerializeResource(Page::Resource::Type type, BinaryWriteStream& stream);
 
 };
+
+class SerializableResource : public ResourceProvider
+{
+
+public:
+	const Page::Resource::Type type;
+
+	Serializable& serializable;
+
+public:
+	SerializableResource(Page::Resource::Type type, Serializable& serializable) :
+		type(type), serializable(serializable)
+	{
+
+	}
+
+
+	uint16_t SerializeResource(Page::Resource::Type type, BinaryWriteStream& stream)
+	{
+		if (type != this->type)
+			return 0;
+
+		serializable.Serialize(stream);
+
+		return serializable.SerializedSize();
+	}
+
+};
+
 
 }
 

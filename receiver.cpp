@@ -7,7 +7,7 @@ Receiver* Receiver::currentReceiver = NULL;
 Receiver::Receiver() : connected(false), config(Config::Instance())
 {
 	// Iterate through channels to initialize their values
-	for (uint8_t channel = 0; channel < MAX_CHANNELS; ++channel)
+	for (uint8_t channel = 0; channel < Config::Constants::RX_MAX_CHANNELS; ++channel)
 	{
 		channels[channel] = 0;
 		mapping[channel] = (Channel) channel;	// Default channel order matches enum order
@@ -32,16 +32,16 @@ uint16_t Receiver::SerializeResource(Page::Resource::Type type, BinaryWriteStrea
 	switch (type)
 	{
 		case Page::Resource::RECEIVER_CHANNELS:
-			for (uint8_t channel = 0; channel < MAX_CHANNELS; ++channel)
+			for (uint8_t channel = 0; channel < Config::Constants::RX_MAX_CHANNELS; ++channel)
 				stream.Write(channels[channel]);
 
-			return sizeof(uint16_t) * MAX_CHANNELS;
+			return sizeof(uint16_t) * Config::Constants::RX_MAX_CHANNELS;
 
 		case Page::Resource::RECEIVER_NORMALIZED:
-			for (uint8_t channel = 0; channel < MAX_CHANNELS; ++channel)
+			for (uint8_t channel = 0; channel < Config::Constants::RX_MAX_CHANNELS; ++channel)
 				stream.Write(NormalizedChannel(static_cast<Channel>(channel)));
 
-			return sizeof(float) * MAX_CHANNELS;
+			return sizeof(float) * Config::Constants::RX_MAX_CHANNELS;
 
 		case Page::Resource::RECEIVER_CONNECTED:
 			stream.Write(connected);
@@ -76,7 +76,7 @@ float Receiver::NormalizedChannel(Channel channel) const
 void Receiver::UpdateChannels(uint16_t* input)
 {
 	// Apply channel mapping by copying channels from the input 
-	for (uint8_t channel = 0; channel < MAX_CHANNELS; ++channel)
+	for (uint8_t channel = 0; channel < Config::Constants::RX_MAX_CHANNELS; ++channel)
 	{
 		uint8_t target = mapping[channel];
 		channels[target] = input[channel];

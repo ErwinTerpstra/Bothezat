@@ -4,12 +4,18 @@
 #include "Arduino.h"
 #include "vector3.h"
 
+#include "binary_stream.h"
+#include "memory_stream.h"
+#include "page.h"
+
+#include <DueFlashStorage.h>
+
 namespace bothezat
 {
 
 class Vector3;
 
-class Config
+class Config : public Serializable, public Deserializable, public SerializableResource
 {	
 	
 public:
@@ -33,6 +39,8 @@ public:
 		 */
 		static const uint8_t RX_PWM_AMOUNT = 2;
 
+		static const uint8_t RX_MAX_CHANNELS = 8;
+
 		/*
 		 * Motor controller
 		 */
@@ -40,7 +48,7 @@ public:
 
 	};
 
-	struct ChannelCalibration
+	struct ChannelCalibration : public Serializable, public Deserializable
 	{
 		uint16_t min, max, mid, deadband;
 
@@ -51,9 +59,37 @@ public:
 			max = 1950;
 			deadband = 30;
 		}
+
+		virtual void Serialize(BinaryWriteStream& stream) const
+		{
+			stream.Write(min);
+			stream.Write(max);
+			stream.Write(mid);
+			stream.Write(deadband);
+		}
+
+		virtual bool Deserialize(BinaryReadStream& stream)
+		{
+			min = stream.ReadUInt16();
+			max = stream.ReadUInt16();
+			mid = stream.ReadUInt16();
+			deadband = stream.ReadUInt16();
+
+			return true;
+		}
+
+		__inline virtual uint32_t SerializedSize() const
+		{
+			return ChannelCalibration::Size();
+		}
+
+		static uint32_t Size()
+		{
+			return sizeof(uint16_t) * 4;
+		}
 	};
 
-	struct PidConfiguration
+	struct PidConfiguration : public Serializable, public Deserializable
 	{
 		float kp, ki, kd;
 		
@@ -66,7 +102,45 @@ public:
 		{
 
 		}
+
+		virtual void Serialize(BinaryWriteStream& stream) const
+		{
+			stream.Write(kp);
+			stream.Write(ki);
+			stream.Write(kd);
+		}
+
+		virtual bool Deserialize(BinaryReadStream& stream)
+		{
+			kp = stream.ReadFloat();
+			ki = stream.ReadFloat();
+			kd = stream.ReadFloat();
+
+			return true;
+		}
+
+		__inline virtual uint32_t SerializedSize() const
+		{
+			return PidConfiguration::Size();
+		}
+
+		static uint32_t Size()
+		{
+			return sizeof(float) * 3;
+		}
+
 	};
+
+	static const uint32_t CONFIG_MAGIC = 0xDEADBEEF;
+
+	static const uint16_t LATEST_VERSION = 0x01;
+
+	/*
+	 * Config management
+	 */
+	uint32_t MAGIC;
+
+	uint16_t VERSION;
 
 	/*
 	 * System
@@ -78,7 +152,7 @@ public:
 	 */
 	uint32_t SR_BAUD_RATE;
 
-	ChannelCalibration RX_CHANNEL_CALIBRATION[16];
+	ChannelCalibration RX_CHANNEL_CALIBRATION[Constants::RX_MAX_CHANNELS];
 
 	/*
 	 * Motion sensor
@@ -119,16 +193,31 @@ public:
 	PidConfiguration MC_PID_CONFIGURATION[3];
 
 private:
+	uint8_t* buffer;
+
+	uint32_t bufferSize;
+
+	MemoryStream bufferStream;
+
+private:
 	Config();
+
+	~Config();
 
 	static Config instance;
 
 public:
-	void ReadEEPROM();
+	bool ReadEEPROM();
 
 	void WriteEEPROM();
 
 	void LoadDefaults();
+
+	virtual void Serialize(BinaryWriteStream& stream) const;
+
+	virtual bool Deserialize(BinaryReadStream& stream);
+
+	virtual uint32_t SerializedSize() const;
 
 public:
 

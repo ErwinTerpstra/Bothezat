@@ -6,24 +6,46 @@
 namespace bothezat
 {
 	
-class MemoryStream : public BinaryReadStream
+class MemoryStream : public BinaryReadStream, public BinaryWriteStream
 {
 
 private:
-	const uint8_t* buffer;
+	uint8_t* buffer;
 	uint32_t offset;
-	uint32_t size;
+	uint32_t length;
+
+	bool canWrite;
 
 public:
 
-	MemoryStream(const uint8_t* buffer, uint32_t size) : buffer(buffer), size(size), offset(0)
+	MemoryStream() : buffer(NULL), length(0), offset(0), canWrite(true)
+	{
+
+	}
+
+	MemoryStream(uint8_t* buffer, uint32_t length) : buffer(buffer), length(length), offset(0), canWrite(true)
+	{
+
+	}
+
+	MemoryStream(const uint8_t* buffer, uint32_t length) : buffer(const_cast<uint8_t*>(buffer)), length(length), offset(0), canWrite(false)
 	{
 
 	}
 
 	uint32_t Available() const
 	{
-		return size - offset;
+		return length - offset;
+	}
+
+	uint32_t Offset() const
+	{
+		return offset;
+	}
+
+	uint32_t Length() const
+	{
+		return length;
 	}
 
 	uint32_t Seek(int32_t amount)
@@ -49,9 +71,11 @@ public:
 		return length;
 	}
 
-	/*
 	uint32_t Write(const uint8_t* buffer, uint32_t length)
 	{
+		if (!canWrite)
+			return 0;
+		
 		length = min(length, Available());
 
 		for (uint32_t byte = 0; byte < length; ++byte)
@@ -61,7 +85,6 @@ public:
 
 		return length;
 	}
-	*/
 	
 };
 

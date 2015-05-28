@@ -214,7 +214,7 @@ struct Quaternion : public Serializable, public Deserializable
 		stream.Write(w);
 	}
 
-	uint32_t SerializedSize() const { return sizeof(float) * 4; }
+	__inline uint32_t SerializedSize() const { return Quaternion::Size(); }
 
 	bool Deserialize(BinaryReadStream& stream)
 	{
@@ -226,6 +226,8 @@ struct Quaternion : public Serializable, public Deserializable
 		z = stream.ReadFloat();
 		w = stream.ReadFloat();	
 	}
+
+	static uint32_t Size() { return sizeof(float) * 4; }
 
 	static float Dot(const Quaternion& q1, const Quaternion& q2) 
 	{
@@ -271,7 +273,7 @@ struct Quaternion : public Serializable, public Deserializable
 		return out;
 	}
 
-	static Quaternion& Slerp(const Quaternion& q1, const Quaternion& q2, float t)
+	static Quaternion Slerp(const Quaternion& q1, const Quaternion& q2, float t)
 	{
 		Quaternion result;
 		Slerp(result, q1, q2, t);

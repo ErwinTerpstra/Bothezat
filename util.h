@@ -1,6 +1,8 @@
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
+#include "compiler.h"
+
 namespace bothezat
 {
 
@@ -12,7 +14,7 @@ public:
 	
 private:
 
-	static const uint8_t CRC_WIDTH = sizeof(crc);
+	static const uint8_t CRC_WIDTH = sizeof(crc) * 8;
 	static const uint32_t CRC_TOP_BIT = 1 << (CRC_WIDTH - 1);
 	static const uint32_t CRC_POLYNOMIAL = 0x04C11DB7;
 

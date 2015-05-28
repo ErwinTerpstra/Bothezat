@@ -63,10 +63,10 @@ void PwmReceiver::Loop(uint32_t dt)
 	ReadRaw();
 	/*/
 
-	uint16_t channels[Receiver::MAX_CHANNELS];				// Pulse length for each channel
+	uint16_t channels[Config::Constants::RX_MAX_CHANNELS];		// Pulse length for each channel
 
 	// Initialize all channels to the mid level
-	for (uint8_t channel = 0; channel < Receiver::MAX_CHANNELS; ++channel)
+	for (uint8_t channel = 0; channel < Config::Constants::RX_MAX_CHANNELS; ++channel)
 		channels[channel] = config.RX_CHANNEL_CALIBRATION[channel].mid;
 
 	// Copy pulse lengths from signal pins to channel array
@@ -95,11 +95,11 @@ void PwmReceiver::HandleISR(uint32_t mask)
 
 void PwmReceiver::ReadRaw()
 {
-	uint16_t channels[Receiver::MAX_CHANNELS];						// Pulse length for each channel
+	uint16_t channels[Config::Constants::RX_MAX_CHANNELS];			// Pulse length for each channel
 	uint8_t channelsReading = Config::Constants::RX_PWM_AMOUNT;		// Amount of pin which are still being measured.
 
 	// Initialize all channels to the mid level
-	for (uint8_t channel = 0; channel < Receiver::MAX_CHANNELS; ++channel)
+	for (uint8_t channel = 0; channel < Config::Constants::RX_MAX_CHANNELS; ++channel)
 		channels[channel] = config.RX_CHANNEL_CALIBRATION[channel].mid;
 
 	// Disable interrupts to get accurate timing

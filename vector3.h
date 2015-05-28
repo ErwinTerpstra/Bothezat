@@ -135,7 +135,7 @@ struct Vector3 : public Serializable, public Deserializable
 		stream.Write(z);
 	}
 
-	uint32_t SerializedSize() const { return sizeof(float) * 3; }
+	__inline uint32_t SerializedSize() const { return Vector3::Size(); }
 
 	bool Deserialize(BinaryReadStream& stream)
 	{
@@ -173,6 +173,8 @@ struct Vector3 : public Serializable, public Deserializable
 
 		return out;
 	}
+
+	static uint32_t Size() { return sizeof(float) * 3; }
 
 	static Vector3 Zero()		{ return Vector3(); }
 	static Vector3 Forward()	{ return Vector3(0.0f, 0.0f, 1.0f); }
