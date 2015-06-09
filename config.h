@@ -7,6 +7,7 @@
 #include "binary_stream.h"
 #include "memory_stream.h"
 #include "page.h"
+#include "command.h"
 
 #include <DueFlashStorage.h>
 
@@ -15,7 +16,7 @@ namespace bothezat
 
 class Vector3;
 
-class Config : public Serializable, public Deserializable, public SerializableResource
+class Config : public Serializable, public Deserializable, public SerializableResource, public CommandHandler
 {	
 	
 public:
@@ -37,7 +38,7 @@ public:
 		/*
 		 *	Radio receiver
 		 */
-		static const uint8_t RX_PWM_AMOUNT = 2;
+		static const uint8_t RX_PWM_AMOUNT = 4;
 
 		static const uint8_t RX_MAX_CHANNELS = 8;
 
@@ -218,6 +219,8 @@ public:
 	virtual bool Deserialize(BinaryReadStream& stream);
 
 	virtual uint32_t SerializedSize() const;
+
+	virtual bool HandleCommand(Command::RequestMessage& command);
 
 public:
 

@@ -5,6 +5,50 @@ namespace bothezat
 {
 	
 
+class BinaryWriteStream
+{
+
+public:
+
+	template<typename T>
+	void Write(T data)
+	{
+		Write(reinterpret_cast<uint8_t*>(&data), sizeof(T));
+	}
+
+	void Write(uint8_t data)
+	{
+		Write(&data, 1);
+	}
+
+	void Write(uint16_t data)
+	{
+		Write(reinterpret_cast<uint8_t*>(&data), sizeof(uint16_t));
+	}
+
+	void Write(int16_t data)
+	{
+		Write(reinterpret_cast<uint8_t*>(&data), sizeof(int16_t));
+	}
+
+	void Write(uint32_t data)
+	{
+		Write(reinterpret_cast<uint8_t*>(&data), sizeof(uint32_t));
+	}
+
+	void Write(int32_t data)
+	{
+		Write(reinterpret_cast<uint8_t*>(&data), sizeof(int32_t));
+	}
+
+	void Write(float data)
+	{
+		Write(reinterpret_cast<uint8_t*>(&data), sizeof(float));
+	}
+
+	virtual uint32_t Write(const uint8_t* buffer, uint32_t length) = 0;
+};
+
 class BinaryReadStream
 {
 
@@ -85,51 +129,13 @@ public:
 		return value;
 	}
 
+	void ReadTo(BinaryWriteStream& stream, uint32_t length)
+	{
+		while (length-- > 0)
+			stream.Write(ReadByte());
+	}
+
 	virtual uint32_t Read(uint8_t* buffer, uint32_t length, bool peek = false) = 0;
-};
-
-class BinaryWriteStream
-{
-
-public:
-
-	template<typename T>
-	void Write(T data)
-	{
-		Write(reinterpret_cast<uint8_t*>(&data), sizeof(T));
-	}
-
-	void Write(uint8_t data)
-	{
-		Write(&data, 1);
-	}
-
-	void Write(uint16_t data)
-	{
-		Write(reinterpret_cast<uint8_t*>(&data), sizeof(uint16_t));
-	}
-
-	void Write(int16_t data)
-	{
-		Write(reinterpret_cast<uint8_t*>(&data), sizeof(int16_t));
-	}
-
-	void Write(uint32_t data)
-	{
-		Write(reinterpret_cast<uint8_t*>(&data), sizeof(uint32_t));
-	}
-
-	void Write(int32_t data)
-	{
-		Write(reinterpret_cast<uint8_t*>(&data), sizeof(int32_t));
-	}
-
-	void Write(float data)
-	{
-		Write(reinterpret_cast<uint8_t*>(&data), sizeof(float));
-	}
-
-	virtual uint32_t Write(const uint8_t* buffer, uint32_t length) = 0;
 };
 
 class BinaryStream : public BinaryReadStream, public BinaryWriteStream

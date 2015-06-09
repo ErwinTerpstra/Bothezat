@@ -1,5 +1,7 @@
 #include "config.h"
 
+#include "command.h"
+
 using namespace bothezat;
 
 Config Config::instance;
@@ -42,6 +44,8 @@ void Config::WriteEEPROM()
 
 	// Write buffer to flash
 	flash.write(0, buffer, bufferSize);
+
+	Debug::Print("Config written!\n");
 }
 
 void Config::LoadDefaults()
@@ -93,7 +97,7 @@ void Config::LoadDefaults()
 	MC_PWM_MAX_COMMAND			= 2050;
 
 	MC_PID_CONFIGURATION[0] 	= PidConfiguration(1.0f, 0.005f, 1.0f);
-	MC_PID_CONFIGURATION[1] 	= PidConfiguration(1.0f, 0.005f, 1.0f);
+	MC_PID_CONFIGURATION[1] 	= PidConfiguration(1.0f, 0.005f, 0.0f);
 	MC_PID_CONFIGURATION[2] 	= PidConfiguration(1.0f, 0.005f, 1.0f);
 }
 
@@ -271,4 +275,17 @@ uint32_t Config::SerializedSize() const
 
 		PidConfiguration::Size() * 3 + // MC_PID_CONFIGURATION[3];
 	0;
+}
+
+bool Config::HandleCommand(Command::RequestMessage& command)
+{
+	if (command.type != Command::SAVE_CONFIG)
+		return false;
+
+	if (!Deserialize(command.buffer.readStream))
+		return false;
+
+	WriteEEPROM();
+
+	return true;
 }

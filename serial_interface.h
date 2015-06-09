@@ -19,8 +19,8 @@ friend class Module<SerialInterface>;
 private:
 	static const uint32_t READ_CHUNK_SIZE = 16;
 
-	static const uint32_t MESSAGE_BUFFER_SIZE	= 128;
-	static const uint32_t RESOURCE_BUFFER_SIZE 	= 256;
+	static const uint32_t MESSAGE_BUFFER_SIZE	= 1024 * 4;
+	static const uint32_t DATA_BUFFER_SIZE 		= 1024 * 4;
 
 	struct Message : public Serializable, public Deserializable
 	{
@@ -110,42 +110,14 @@ private:
 		}
 	};
 
-	struct Command
-	{
-		enum Type 
-		{
-			CALIBRATE 				= 0x01,
-			SET_RESOURCE_VALUE 		= 0x02,
-
-			INVALID_COMMAND			= 0xFF
-		};
-
-		enum State
-		{
-			COMMAND_UNKOWN,
-			COMMAND_OK,
-			COMMAND_ERROR
-		};
-
-		struct RequestMessage
-		{
-			Type command;
-		};
-
-		struct ResponseMessage
-		{
-			State state;
-		};
-
-	};
-
 	// Intermediate buffer for reading serial data. Data is read to this buffer and then transferred to the larger ring buffer
 	uint8_t readChunk[READ_CHUNK_SIZE];
 
 	ResourceProvider* resourceProviders[256];
+	CommandHandler* commandHandlers[256];
 
 	RingBuffer messageBuffer;
-	RingBuffer resourceBuffer;
+	RingBuffer dataBuffer;
 
 	// The message that was last received, or is currently being read
 	Message lastReceivedMessage;
@@ -169,6 +141,7 @@ public:
 	virtual void Loop(uint32_t dt);
 
 	void RegisterResourceProvider(Page::Resource::Type type, ResourceProvider* provider);
+	void RegisterCommandHandler(Command::Type type, CommandHandler* handler);
 
 	void SendLog(const char* msg);
 

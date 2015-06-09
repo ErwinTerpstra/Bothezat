@@ -84,7 +84,7 @@ struct Page
 
 			// Read all resource types
 			for (uint32_t resourceIdx = 0; resourceIdx < numResources; ++resourceIdx)
-				resources[resourceIdx] = static_cast<Resource::Type>(stream.ReadByte());
+				resources[resourceIdx] = static_cast<Resource::Type>(stream.ReadByte());                   
 
 			return true;
 		}

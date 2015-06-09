@@ -6,13 +6,18 @@
 
 #include "motion_sensor.h"
 
+#include "command.h"
+
 using namespace bothezat;
 
 SerialInterface::SerialInterface() : payloadBuffer(NULL), serialPort(SerialPort::Instance())
 {
-	// Initialize all resource providers to NULL
+	// Initialize all resource providers and command handlers to NULL
 	for (uint16_t idx = 0; idx < 256; ++idx)
+	{
 		resourceProviders[idx] = NULL;
+		commandHandlers[idx] = NULL;
+	}
 }
 
 SerialInterface::~SerialInterface()
@@ -27,7 +32,7 @@ SerialInterface::~SerialInterface()
 void SerialInterface::Setup()
 {
 	messageBuffer.Allocate(MESSAGE_BUFFER_SIZE);
-	resourceBuffer.Allocate(RESOURCE_BUFFER_SIZE);
+	dataBuffer.Allocate(DATA_BUFFER_SIZE);
 
 	payloadBuffer = static_cast<uint8_t*>(malloc(Message::MAX_PAYLOAD_LENGTH));
 
@@ -43,6 +48,11 @@ void SerialInterface::Loop(uint32_t dt)
 void SerialInterface::RegisterResourceProvider(Page::Resource::Type type, ResourceProvider* provider)
 {
 	resourceProviders[type] = provider;
+}
+
+void SerialInterface::RegisterCommandHandler(Command::Type type, CommandHandler* handler)
+{
+	commandHandlers[type] = handler;
 }
 
 void SerialInterface::SendLog(const char* msg)
@@ -117,6 +127,8 @@ void SerialInterface::ProcessMessage(const Message& message)
 
 void SerialInterface::ProcessPageRequest(const Message& requestMessage)
 {
+	dataBuffer.Clear();
+
 	Page::RequestMessage request;
 	Page::ResponseMessage response;
 
@@ -133,8 +145,6 @@ void SerialInterface::ProcessPageRequest(const Message& requestMessage)
 	// We always respond with the same number of resources, even if some of them are invalid
 	response.numResources = request.numResources;
 
-	resourceBuffer.Clear();
-
 	// Iterate through each resource in the request 
 	for (uint32_t resourceIdx = 0; resourceIdx < request.numResources; ++resourceIdx)
 	{
@@ -148,8 +158,8 @@ void SerialInterface::ProcessPageRequest(const Message& requestMessage)
 		{
 			// Set the data pointer of the resource to the current position of the write stream
 			// TODO: Check if the resource fits in the buffer
-			resource.data = resourceBuffer.writeStream.DataPointer();
-			resource.length = resourceProvider->SerializeResource(type, resourceBuffer.writeStream);
+			resource.data = dataBuffer.writeStream.DataPointer();
+			resource.length = resourceProvider->SerializeResource(type, dataBuffer.writeStream);
 
 			// If the provider couldn't supply the resource, we handle it as an invalid type
 			if (resource.length == 0)
@@ -171,7 +181,39 @@ void SerialInterface::ProcessPageRequest(const Message& requestMessage)
 
 void SerialInterface::ProcessCommandRequest(const Message& requestMessage)
 {
+	dataBuffer.Clear();
 
+	Command::RequestMessage request(dataBuffer);
+	Command::ResponseMessage response;
+
+	// Deserialize the request struct from the payload
+	MemoryStream stream(requestMessage.payload, requestMessage.payloadLength);
+	bool result = request.Deserialize(stream);
+
+	if (!result)
+	{
+		Debug::Print("Failed to deserialize command request!\n");
+		return;
+	}
+
+	// Search for a command handler registered for this type
+	CommandHandler* commandHandler = commandHandlers[request.type];
+
+	if (commandHandler != NULL)
+	{
+		// Pass the request to the command handler
+		if (commandHandler->HandleCommand(request))
+			response.state = Command::COMMAND_OK;
+		else
+			response.state = Command::COMMAND_ERROR;
+	}
+	else
+	{
+		response.state = Command::COMMAND_UNKOWN;
+	}
+
+	// Send a response message with our response struct as payload
+	SendResponseMessage(requestMessage, response);
 }
 
 void SerialInterface::ProcessLogRequest(const Message& requestMessage)

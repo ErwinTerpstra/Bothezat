@@ -90,6 +90,7 @@ public:
 		motorController->Setup();
 
 		RegisterResourceProviders();
+		RegisterCommandHandlers();
 
 		timer = Timer::GetFreeTimer();
 
@@ -118,6 +119,11 @@ public:
 		serialInterface->RegisterResourceProvider(Page::Resource::RECEIVER_NORMALIZED, 	receiver);
 		serialInterface->RegisterResourceProvider(Page::Resource::RECEIVER_CONNECTED,	receiver);
 		serialInterface->RegisterResourceProvider(Page::Resource::RECEIVER_CONNECTED,	receiver);
+	}
+
+	void RegisterCommandHandlers()
+	{
+		serialInterface->RegisterCommandHandler(Command::SAVE_CONFIG, 					&config);
 	}
 
 	void Loop()
