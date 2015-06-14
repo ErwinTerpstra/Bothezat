@@ -124,6 +124,7 @@ public:
 	void RegisterCommandHandlers()
 	{
 		serialInterface->RegisterCommandHandler(Command::SAVE_CONFIG, 					&config);
+		serialInterface->RegisterCommandHandler(Command::RESET_CONFIG, 					&config);
 	}
 
 	void Loop()

@@ -279,12 +279,32 @@ uint32_t Config::SerializedSize() const
 
 bool Config::HandleCommand(Command::RequestMessage& command)
 {
-	if (command.type != Command::SAVE_CONFIG)
-		return false;
+	switch (command.type)
+	{
+		case Command::SAVE_CONFIG:
+			return ReadConfig(command);
+
+		case Command::RESET_CONFIG:
+			return ResetConfig(command);
+	}
+
+	return false;
+}
+
+bool Config::ReadConfig(Command::RequestMessage& command)
+{
 
 	if (!Deserialize(command.buffer.readStream))
 		return false;
 
+	WriteEEPROM();
+
+	return true;
+}
+
+bool Config::ResetConfig(Command::RequestMessage& Command)
+{
+	LoadDefaults();
 	WriteEEPROM();
 
 	return true;

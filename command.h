@@ -12,7 +12,9 @@ struct Command
 	enum Type 
 	{
 		SAVE_CONFIG				= 0x01,
-		CALIBRATE_ACCELEROMETER	= 0x02,
+		RESET_CONFIG 			= 0x02,
+
+		CALIBRATE_ACCELEROMETER	= 0x10,
 
 		INVALID_COMMAND			= 0xFF
 	};

@@ -222,6 +222,11 @@ public:
 
 	virtual bool HandleCommand(Command::RequestMessage& command);
 
+private:
+	
+	bool ReadConfig(Command::RequestMessage& command);
+	bool ResetConfig(Command::RequestMessage& Command);
+
 public:
 
 	static Config& Instance()
