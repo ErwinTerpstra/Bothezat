@@ -77,6 +77,7 @@ void Config::LoadDefaults()
 	MS_CALIBRATION_SAMPLES		= 10;			// Amount of samples for IMU
 	MS_CALIBRATION_INTERVAL		= 100;			// Time between IMU calibration samples
 	MS_GYRO_FILTER_RC			= 2.5f;			// RC for gyro high pass filter
+	MS_ACCEL_FILTER_RC			= 2.5f;			// RC for gyro high pass filter
 	MS_ACCEL_CORRECTION_RC		= 0.0002f;		// Lower means slower correction to gyro by accelerometer
 	MS_ACCEL_MAX				= 0.15f;		// Accelerometer values with a larger deviation from 1G than this will get discarded
 
@@ -132,6 +133,7 @@ void Config::Serialize(BinaryWriteStream& stream) const
 	stream.Write(MS_CALIBRATION_SAMPLES);
 	stream.Write(MS_CALIBRATION_INTERVAL);
 	stream.Write(MS_GYRO_FILTER_RC);	
+	stream.Write(MS_ACCEL_FILTER_RC);
 	stream.Write(MS_ACCEL_CORRECTION_RC);
 	stream.Write(MS_ACCEL_MAX);
 
@@ -191,6 +193,7 @@ bool Config::Deserialize(BinaryReadStream& stream)
 	MS_CALIBRATION_SAMPLES 		= stream.ReadByte();
 	MS_CALIBRATION_INTERVAL 	= stream.ReadUInt16();
 	MS_GYRO_FILTER_RC 			= stream.ReadFloat();
+	MS_ACCEL_FILTER_RC 			= stream.ReadFloat();
 	MS_ACCEL_CORRECTION_RC 		= stream.ReadFloat();
 	MS_ACCEL_MAX 				= stream.ReadFloat();
 
@@ -245,6 +248,8 @@ uint32_t Config::SerializedSize() const
 		sizeof(uint16_t) + // MS_CALIBRATION_INTERVAL;
 
 		sizeof(float) + // MS_GYRO_FILTER_RC;
+
+		sizeof(float) + // MS_ACCEL_FILTER_RC;
 		
 		sizeof(float) + // MS_ACCEL_CORRECTION_RC;
 

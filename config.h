@@ -164,6 +164,8 @@ public:
 
 	float MS_GYRO_FILTER_RC;
 	
+	float MS_ACCEL_FILTER_RC;
+
 	float MS_ACCEL_CORRECTION_RC;
 
 	float MS_ACCEL_MAX;

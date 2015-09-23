@@ -19,6 +19,9 @@ MotionSensor::MotionSensor() :
 
 void MotionSensor::Setup()
 {
+	angularVelocityFilter.SetRC(config.MS_GYRO_FILTER_RC);
+	accelerationFilter.SetRC(config.MS_ACCEL_FILTER_RC);
+
 	SetupMPU();
 	Calibrate();
 }
