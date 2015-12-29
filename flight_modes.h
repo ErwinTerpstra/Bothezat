@@ -2,26 +2,28 @@
 #define _FLIGHT_MODES_H_
 
 #include "bothezat.h"
-#include "flight_system.h"
 
 #include "receiver.h"
 
 namespace bothezat
 {
 
-enum FlightModeId
-{
-	MANUAL = 0,
-	ATTITUDE,
-
-	LAST_FLIGHT_MODE
-};
 
 // Base class for flight modes
 class FlightMode
 {
+public:
+
+	enum ID
+	{
+		MANUAL = 0,
+		ANGLE,
+
+		LAST_FLIGHT_MODE
+	};
+
 private:
-	FlightModeId id;
+	ID id;
 
 	Quaternion desiredOrientation;
 	Rotation desiredRotation;
@@ -32,7 +34,7 @@ protected:
 	Config& config;
 
 protected:
-	FlightMode(FlightModeId id, Receiver& receiver) : 
+	FlightMode(ID id, Receiver& receiver) : 
 		id(id), desiredOrientation(),
 		receiver(receiver), config(Config::Instance())
 	{
@@ -51,6 +53,8 @@ public:
 
 	virtual void OnEnter() { };
 	virtual void OnExit() { };
+
+	virtual const char* Name() = 0;
 
 	const Quaternion& DesiredOrientation() const { return desiredOrientation; }
 	const Rotation& DesiredRotation() const { return desiredRotation; }
@@ -95,14 +99,16 @@ public:
 		SetDesiredOrientation(setOrientation);
 	}
 
+	virtual const char* Name() { return "Manual"; }
+
 };
 
 // Sticks control angle directly
-class AttitudeMode : public FlightMode
+class AngleMode : public FlightMode
 {
 
 public:
-	AttitudeMode(Receiver& receiver) : FlightMode(ATTITUDE, receiver)
+	AngleMode(Receiver& receiver) : FlightMode(ANGLE, receiver)
 	{
 
 	}
@@ -127,6 +133,8 @@ public:
 		Quaternion orientation = Quaternion::FromEulerAngles(orientation, rotation);
 		SetDesiredOrientation(orientation);
 	}
+
+	virtual const char* Name() { return "Angle"; }
 
 };
 

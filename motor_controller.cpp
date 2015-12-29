@@ -8,7 +8,7 @@
 
 using namespace bothezat;
 
-MotorController::MotorController() : receiver(NULL), motionSensor(NULL), flightSystem(NULL)
+MotorController::MotorController() : receiver(NULL), motionSensor(NULL), flightSystem(NULL), armed(false)
 {
 	{
 		// Front-right
@@ -68,6 +68,9 @@ void MotorController::Setup()
 
 void MotorController::Loop(uint32_t dt)
 {	
+	if (!IsArmed())
+		return;
+	
 	const Quaternion& orientation = motionSensor->CurrentOrientation();
 	const Rotation& desiredRotation = flightSystem->CurrentMode().DesiredRotation();
 	Rotation rotation;
@@ -132,6 +135,35 @@ void MotorController::Debug()
 	{
 		const Motor& motor = motors[motorIdx];
 		Debug::Print("%u: %u\n", motorIdx, motor.lastCommand);
+	}
+}
+
+void MotorController::SetArmState(bool state)
+{
+	if (state == armed)
+		return;
+
+	armed = state;
+
+	if (!armed)
+	{
+		DisableMotors();
+		Debug::Print("Motors disarmed!\n");
+	}
+	else
+		Debug::Print("Motors armed!\n");
+}
+
+void MotorController::DisableMotors()
+{
+	for (uint8_t motorIdx = 0; motorIdx < Config::Constants::MC_MOTOR_AMOUNT; ++motorIdx)
+	{
+		Motor& motor = motors[motorIdx];
+
+		if (!motor.enabled)
+			continue;
+
+		WritePwm(motor.pin, 0);	// Override min output check
 	}
 }
 

@@ -45,6 +45,11 @@ public:
 		return fabs(a - b) <= epsilon;
 	}
 
+	static int Sign(int x)
+	{
+		return (x > 0) - (x < 0);
+	}
+
 	static float Sign(float x)
 	{
 		return x == 0.0f ? 0.0f : (x > 0.0f ? 1.0f : -1.0f);

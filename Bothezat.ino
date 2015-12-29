@@ -12,6 +12,8 @@
 #include "pwm_receiver.h"
 #include "flight_system.h"
 #include "motor_controller.h"
+#include "aux_functions.h"
+#include "stick_commands.h"
 #include "led_controller.h"
 #include "serial_interface.h"
 #include "timer.h"
@@ -38,6 +40,8 @@ private:
 	LedController* ledController;
 	FlightSystem* flightSystem;
 	MotorController* motorController;
+	AuxFunctions* auxFunctions;
+	StickCommands* stickCommands;
 	SerialInterface* serialInterface;
 
 public:
@@ -79,6 +83,8 @@ public:
 		receiver = &Receiver::CurrentReceiver();
 		motionSensor = &MotionSensor::Instance();
 		flightSystem = &FlightSystem::Instance();
+		auxFunctions = &AuxFunctions::Instance();
+		stickCommands = &StickCommands::Instance();
 		//ledController = &LedController::Instance();
 		motorController = &MotorController::Instance();
 
@@ -86,6 +92,8 @@ public:
 		receiver->Setup();
 		motionSensor->Setup();
 		flightSystem->Setup();
+		auxFunctions->Setup();
+		stickCommands->Setup();
 		//ledController->Setup();
 		motorController->Setup();
 
@@ -102,6 +110,8 @@ public:
 		dt = 10;
 		debugTime = 0;
 		loopStart = lastLoopStart = timer->Micros();
+
+		BrokenWindow();
 
 		Debug::Print("Initialization complete!\n");
 	}
@@ -127,6 +137,32 @@ public:
 		serialInterface->RegisterCommandHandler(Command::RESET_CONFIG, 					&config);
 	}
 
+	void BrokenWindow()
+	{
+		// Aux control functions
+		AuxFunctions::ControlFunction angleModeFunction;
+		angleModeFunction.type = AuxFunctions::ControlFunction::ENABLE_ANGLE_MODE;
+		angleModeFunction.channel = Receiver::AUX1;
+		angleModeFunction.min = 0.0f;
+		angleModeFunction.max = 1.0f;
+
+		auxFunctions->AddControlFunction(angleModeFunction);
+
+		// Stick commands
+		StickCommands::Command armCommand;
+		armCommand.type = StickCommands::Command::ARM_MOTORS;
+		armCommand.SetStickState(Receiver::THROTTLE, -1);
+		armCommand.SetStickState(Receiver::RUDDER, -1);
+
+		StickCommands::Command disarmCommand;
+		disarmCommand.type = StickCommands::Command::DISARM_MOTORS;
+		disarmCommand.SetStickState(Receiver::THROTTLE, -1);
+		disarmCommand.SetStickState(Receiver::RUDDER, 1);
+
+		stickCommands->AddCommand(armCommand);
+		stickCommands->AddCommand(disarmCommand);
+	}
+
 	void Loop()
 	{
 		loopStart = timer->Micros();
@@ -141,6 +177,8 @@ public:
 		motionSensor->Loop(dt);
 		//ledController->Loop(dt);
 		flightSystem->Loop(dt);
+		auxFunctions->Loop(dt);
+		stickCommands->Loop(dt);
 		motorController->Loop(dt);
 		serialInterface->Loop(dt);
 

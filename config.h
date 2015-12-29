@@ -38,7 +38,7 @@ public:
 		/*
 		 *	Radio receiver
 		 */
-		static const uint8_t RX_PWM_AMOUNT = 4;
+		static const uint8_t RX_PWM_AMOUNT = 6;
 
 		static const uint8_t RX_MAX_CHANNELS = 8;
 
@@ -46,6 +46,18 @@ public:
 		 * Motor controller
 		 */
 		static const uint8_t MC_MOTOR_AMOUNT = 4;
+
+		/**
+		 * Aux control
+		 */
+		
+		static const uint8_t AC_MAX_CONTROL_FUNCTIONS = 8;
+
+		/**
+		 * Stick commands
+		 */
+
+		static const uint8_t SC_MAX_COMMANDS = 8;
 
 	};
 

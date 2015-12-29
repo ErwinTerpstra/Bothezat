@@ -22,7 +22,6 @@ public:
 	struct SignalPin
 	{	
 		uint16_t pin;
-		uint16_t debugPin;
 		uint32_t mask;
 
 		Channel channel;
@@ -31,9 +30,8 @@ public:
 
 		SignalPin() { }
 
-		SignalPin(uint16_t pin, uint16_t debugPin, Channel channel) : 
-				pin(pin), debugPin(debugPin), 
-				channel(channel), pulseLength(0), pulseStart(0)
+		SignalPin(uint16_t pin, Channel channel) : 
+				pin(pin), channel(channel), pulseLength(0), pulseStart(0)
 		{
 			mask = g_APinDescription[pin].ulPin;
 		}
@@ -44,7 +42,6 @@ public:
 				return *this;
 
 			pin 			= other.pin;
-			debugPin		= other.debugPin;
 			mask 			= other.mask;
 			channel 		= other.channel;
 			pulseLength 	= other.pulseLength;
@@ -59,10 +56,6 @@ public:
 			{
 				// Start of pulse, save pulse start time
 				pulseStart = time;
-				
-				#ifdef BOTH_DEBUG
-					digitalWrite(debugPin, HIGH);
-				#endif
 			}
 			else
 			{
@@ -73,10 +66,6 @@ public:
 					pulseLength = 0xffffffff - pulseStart + time;
 				else
 					pulseLength = time - pulseStart;
-
-				#ifdef BOTH_DEBUG
-					digitalWrite(debugPin, LOW);
-				#endif
 			}
 		}
 	};
@@ -98,8 +87,6 @@ public:
 
 	void HandleISR(uint32_t mask);
 
-private:
-	void ReadRaw();
 };
 
 }

@@ -65,6 +65,8 @@ private:
 	Receiver* receiver;
 	FlightSystem* flightSystem;	
 
+	bool armed;
+
 protected:
 	MotorController();
 
@@ -74,6 +76,12 @@ public:
 	virtual void Loop(uint32_t dt);
 
 	virtual void Debug();
+
+	void SetArmState(bool state);
+
+	void DisableMotors();
+
+	bool IsArmed() const { return armed; }
 
 private:
 	void WriteMotor(Motor& motor, uint16_t commmand);

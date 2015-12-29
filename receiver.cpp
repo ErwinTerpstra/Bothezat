@@ -54,8 +54,8 @@ uint16_t Receiver::SerializeResource(Page::Resource::Type type, BinaryWriteStrea
 void Receiver::Debug() const
 {
 	Debug::Print("Channels:\n");
-	Debug::Print("%d; %d; %d; %d\n", channels[THROTTLE], channels[ELEVATOR], channels[AILERON], channels[RUDDER]);
-	Debug::Print("%.2f;%.2f;%.2f;%.2f\n", NormalizedChannel(THROTTLE), NormalizedChannel(ELEVATOR), NormalizedChannel(AILERON), NormalizedChannel(RUDDER));
+	Debug::Print("%d; %d; %d; %d; %d; %d\n", channels[THROTTLE], channels[ELEVATOR], channels[AILERON], channels[RUDDER], channels[AUX1], channels[AUX2]);
+	Debug::Print("%.2f;%.2f;%.2f;%.2f;%.2f;%.2f\n", NormalizedChannel(THROTTLE), NormalizedChannel(ELEVATOR), NormalizedChannel(AILERON), NormalizedChannel(RUDDER), NormalizedChannel(AUX1), NormalizedChannel(AUX2));
 }
 
 // Returns a normalized, calibrated channel in the -1.0 ... 1.0f range

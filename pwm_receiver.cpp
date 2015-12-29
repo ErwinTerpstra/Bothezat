@@ -8,16 +8,17 @@ using namespace bothezat;
 
 PwmReceiver::PwmReceiver() : Receiver(), timer(NULL)
 {
-	signalPins[0] = SignalPin(48, 40, Receiver::CHANNEL1);
-	signalPins[1] = SignalPin(49, 41, Receiver::CHANNEL2);
-	signalPins[2] = SignalPin(50, 42, Receiver::CHANNEL3);
-	signalPins[3] = SignalPin(51, 43, Receiver::CHANNEL4);
+	signalPins[0] = SignalPin(48, Receiver::CHANNEL1);
+	signalPins[1] = SignalPin(49, Receiver::CHANNEL2);
+	signalPins[2] = SignalPin(50, Receiver::CHANNEL3);
+	signalPins[3] = SignalPin(51, Receiver::CHANNEL4);
+	signalPins[4] = SignalPin(47, Receiver::CHANNEL5);
+	signalPins[5] = SignalPin(46, Receiver::CHANNEL6);
 }
 
 void PwmReceiver::Setup()
 {
 	// Initialize interrupt channel
-	//*
 	pmc_enable_periph_clk(ID_PIOC);
 	NVIC_DisableIRQ(PIOC_IRQn);
 	NVIC_ClearPendingIRQ(PIOC_IRQn);
@@ -34,20 +35,11 @@ void PwmReceiver::Setup()
 		// Configure pin as input
 		PIO_Configure(desc.pPort, PIO_INPUT, desc.ulPin, 0);
 
-#ifdef BOTH_DEBUG
-		pinMode(pin.debugPin, OUTPUT);
-#endif
-
 		// Enable interrupt on each edge change
 		desc.pPort->PIO_AIMDR = pin.mask;
 		desc.pPort->PIO_IER = pin.mask;
 	}
 	
-	/*/
-	for (uint8_t pinIdx = 0; pinIdx < Config::Constants::RX_PWM_AMOUNT; ++pinIdx)
-		pinMode(Config::Pins::RX_PWM + pinIdx, INPUT);
-	//*/
-
 	// Create a timer with a precision of at least 2 us
 	timer = Timer::GetFreeTimer();
 	uint16_t precision = timer->SetPrecision(2000);
@@ -59,10 +51,6 @@ void PwmReceiver::Setup()
 
 void PwmReceiver::Loop(uint32_t dt)
 {
-	/*
-	ReadRaw();
-	/*/
-
 	uint16_t channels[Config::Constants::RX_MAX_CHANNELS];		// Pulse length for each channel
 
 	// Initialize all channels to the mid level
@@ -78,7 +66,6 @@ void PwmReceiver::Loop(uint32_t dt)
 	
 	// Save new pulse lengths
 	UpdateChannels(channels);
-	//*/
 }
 
 void PwmReceiver::HandleISR(uint32_t mask)
@@ -91,69 +78,6 @@ void PwmReceiver::HandleISR(uint32_t mask)
 		if ((mask & signalPins[pinIdx].mask) != 0)
 			signalPins[pinIdx].HandleChange(time);
 	}
-}
-
-void PwmReceiver::ReadRaw()
-{
-	uint16_t channels[Config::Constants::RX_MAX_CHANNELS];			// Pulse length for each channel
-	uint8_t channelsReading = Config::Constants::RX_PWM_AMOUNT;		// Amount of pin which are still being measured.
-
-	// Initialize all channels to the mid level
-	for (uint8_t channel = 0; channel < Config::Constants::RX_MAX_CHANNELS; ++channel)
-		channels[channel] = config.RX_CHANNEL_CALIBRATION[channel].mid;
-
-	// Disable interrupts to get accurate timing
-	noInterrupts();
-
-	uint8_t channel = 0;
-
-	// Wait for all pins to be low
-	do
-	{
-		for (channel = 0; channel < Config::Constants::RX_PWM_AMOUNT; ++channel)
-		{
-			// This pin is still high, break to signal the outer loop to start again
-			// (Is it possible to wait here for the pin to go low? Or do we risk waiting to long then?)
-			if (digitalRead(Config::Pins::RX_PWM + channel) == HIGH)
-				break;
-		}
-	} while (channel < Config::Constants::RX_PWM_AMOUNT);
-
-	// Read until a pulse has been measured for all pins
-	do
-	{	
-		uint32_t start;
-
-		// Find the first pin with a pulse
-		for (channel = 0; channel < Config::Constants::RX_PWM_AMOUNT; ++channel)
-		{
-			if (digitalRead(Config::Pins::RX_PWM + channel) == HIGH)
-			{
-				// Start the timer here to minimize error
-				timer->Start();
-				break;
-			}
-		}
-
-		// No pulse on any pins
-		if (channel >= Config::Constants::RX_PWM_AMOUNT)
-			continue;
-		
-		// Wait for the pulse to end
-		while (digitalRead(Config::Pins::RX_PWM + channel) == HIGH);
-
-		// Pulse is low again, save the timer value 
-		channels[channel] = timer->Micros();
-		--channelsReading;
-
-		// Stop the timer
-		timer->Stop();
-	} while (channelsReading > 0);
-
-	// Re-enable interrupts
-	interrupts();
-
-	UpdateChannels(channels);
 }
 
 void PIOC_Handler(void) 
