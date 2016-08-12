@@ -23,11 +23,12 @@ public:
 		bool enabled;
 		uint8_t pin;
 
+		float lastOutput;
 		uint16_t lastCommand;
 
 		Vector3 weights;
 
-		Motor() : enabled(true), lastCommand(0), weights(0.0f, 0.0f, 0.0f)
+		Motor() : enabled(true), lastOutput(0.0f), lastCommand(0), weights(0.0f, 0.0f, 0.0f)
 		{
 
 		}
@@ -35,6 +36,8 @@ public:
 
 	struct PidController
 	{
+		bool enabled;
+
 		// PID coëfficients
 		float kp;
 		float ki;
@@ -52,6 +55,8 @@ public:
 		void Configure(Config::PidConfiguration configuration);
 
 		void Update(float input, float dt);
+
+		void Reset();
 		
 	};
 
@@ -80,10 +85,14 @@ public:
 	void SetArmState(bool state);
 
 	void DisableMotors();
+	void ResetControllers();
 
 	bool IsArmed() const { return armed; }
 
 private:
+	void UpdateMotorsRelative();
+	void UpdateMotorsNormalized();
+
 	void WriteMotor(Motor& motor, uint16_t commmand);
 
 	void EnablePWM();

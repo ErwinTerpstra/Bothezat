@@ -54,8 +54,9 @@ void MotorController::Setup()
 	// Enable all motors
 	for (uint8_t motorIdx = 0; motorIdx < Config::Constants::MC_MOTOR_AMOUNT; ++motorIdx)
 	{
-		const Motor& motor = motors[motorIdx];
+		Motor& motor = motors[motorIdx];
 		EnablePin(motor.pin);	
+		WriteMotor(motor, config.MC_PWM_MIN_OUTPUT);
 	}
 
 	// Initialize all PID controllers
@@ -64,6 +65,8 @@ void MotorController::Setup()
 		PidController& pid = pidControllers[axis];
 		pid.Configure(config.MC_PID_CONFIGURATION[axis]);
 	}
+
+	pidControllers[1].enabled = false;
 }
 
 void MotorController::Loop(uint32_t dt)
@@ -89,27 +92,80 @@ void MotorController::Loop(uint32_t dt)
 		pid.Update(rotation[axis] / 180.0f, deltaSeconds);
 	}
 
-	// Base output for each motor is determined by throttle amount
+	UpdateMotorsRelative();
+}
+
+void MotorController::UpdateMotorsRelative()
+{	
+	// Base point and output multiplier for each motor is determined by throttle
 	float throttle = receiver->NormalizedChannel(Receiver::THROTTLE);
+	throttle = (throttle + 1.0f) * 0.5f;
 
 	// Calculate outputs for each motor
 	for (uint8_t motorIdx = 0; motorIdx < Config::Constants::MC_MOTOR_AMOUNT; ++motorIdx)
 	{
 		Motor& motor = motors[motorIdx];
 
-		float output = throttle;
+		motor.lastOutput = throttle;
+
+		// Add the output for each axis according to the motor weight for that axis
+		for (uint8_t axis = 0; axis < 3; ++axis)
+			motor.lastOutput += pidControllers[axis].output * motor.weights[axis] * throttle;
+
+		// Clamp within 0 ... 1 range 
+		motor.lastOutput = Util::Clamp(motor.lastOutput, 0.0f, 1.0f);
+
+		// Convert the output to a PWM command
+		uint16_t command = config.MC_PWM_MIN_COMMAND + (config.MC_PWM_MAX_COMMAND - config.MC_PWM_MIN_COMMAND) * motor.lastOutput;
+
+		// Write the output for this motor
+		WriteMotor(motor, command);
+	}
+}
+
+void MotorController::UpdateMotorsNormalized()
+{	
+
+	// Output multiplier for each motor is determined by throttle amount
+	float throttle = receiver->NormalizedChannel(Receiver::THROTTLE);
+	throttle = (throttle + 1.0f) * 0.5f;
+
+	float totalOutput = 0.0f;
+	float maxOutput = 0.0f;
+
+	// Calculate outputs for each motor
+	for (uint8_t motorIdx = 0; motorIdx < Config::Constants::MC_MOTOR_AMOUNT; ++motorIdx)
+	{
+		Motor& motor = motors[motorIdx];
+
+		float output = 0.0f;
 
 		// Add the output for each axis according to the motor weight for that axis
 		for (uint8_t axis = 0; axis < 3; ++axis)
 			output += pidControllers[axis].output * motor.weights[axis];
 
-		output = Util::Clamp(output, -1.0f, 1.0f);
+		motor.lastOutput = output;
 
-		// Convert output to 0.0f ... 1.0f
-		output = (output + 1.0f) * 0.5f;
+		totalOutput += output;
+		maxOutput = max(maxOutput, output);
+	}
+
+	// Normalize and apply outputs for each motor
+	for (uint8_t motorIdx = 0; motorIdx < Config::Constants::MC_MOTOR_AMOUNT; ++motorIdx)
+	{
+		Motor& motor = motors[motorIdx];
+
+		// Normalize output against the maximum motor output. 
+		// This means the motor with the highest value will receive output according to the throttle value
+		// All other motor outputs are scaled accordingly
+		motor.lastOutput = (motor.lastOutput / maxOutput) * throttle;
+
+		// Clamp within 0 ... 1 range (Higher than 1 should not occur, TODO: test this)
+		// NOTE: negative values here could be used as input for active brakes?
+		motor.lastOutput = Util::Clamp(motor.lastOutput, 0.0f, 1.0f);
 
 		// Convert the output to a PWM command
-		uint16_t command = config.MC_PWM_MIN_COMMAND + (config.MC_PWM_MAX_COMMAND - config.MC_PWM_MIN_COMMAND) * output;
+		uint16_t command = config.MC_PWM_MIN_COMMAND + (config.MC_PWM_MAX_COMMAND - config.MC_PWM_MIN_COMMAND) * motor.lastOutput;
 
 		// Write the output for this motor
 		WriteMotor(motor, command);
@@ -148,6 +204,7 @@ void MotorController::SetArmState(bool state)
 	if (!armed)
 	{
 		DisableMotors();
+		ResetControllers();
 		Debug::Print("Motors disarmed!\n");
 	}
 	else
@@ -156,14 +213,21 @@ void MotorController::SetArmState(bool state)
 
 void MotorController::DisableMotors()
 {
+	// Write minimum commands to all motors
 	for (uint8_t motorIdx = 0; motorIdx < Config::Constants::MC_MOTOR_AMOUNT; ++motorIdx)
 	{
 		Motor& motor = motors[motorIdx];
+		WriteMotor(motor, config.MC_PWM_MIN_OUTPUT);
+	}
+}
 
-		if (!motor.enabled)
-			continue;
-
-		WritePwm(motor.pin, 0);	// Override min output check
+void MotorController::ResetControllers()
+{
+	// Reset all PID controllers
+	for (uint8_t axis = 0; axis < 3; ++axis)
+	{
+		PidController& pid = pidControllers[axis];
+		pid.Reset();
 	}
 }
 
@@ -215,7 +279,8 @@ void MotorController::WritePwm(uint8_t pin, uint16_t dutyCycle)
 	PWMC_SetDutyCycle(PWM_INTERFACE, desc.ulPWMChannel, dutyCycle);
 }
 
-MotorController::PidController::PidController() : kp(1.0f), ki(1.0f), kd(1.0f), integratedError(0.0f), lastError(0.0f), target(0.0f), output(0.0f), lastInput(0.0f)
+MotorController::PidController::PidController() : enabled(true), kp(1.0f), ki(1.0f), kd(1.0f), 
+	integratedError(0.0f), lastError(0.0f), target(0.0f), output(0.0f), lastInput(0.0f)
 {
 
 }
@@ -229,6 +294,9 @@ void MotorController::PidController::Configure(Config::PidConfiguration configur
 
 void MotorController::PidController::Update(float input, float dt)
 {
+	if (!enabled)
+		return;
+
 	float error = target - input;
 	integratedError += error * dt;
 
@@ -238,4 +306,14 @@ void MotorController::PidController::Update(float input, float dt)
 
 	lastError = error;
 	lastInput = input;
+}
+
+void MotorController::PidController::Reset()
+{
+	integratedError = 0.0f;
+	lastError = 0.0f;
+
+	target = 0.0f;
+	output = 0.0f;
+	lastInput = 0.0f;
 }

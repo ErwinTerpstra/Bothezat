@@ -191,7 +191,7 @@ public:
 			//motionSensor->Debug();
 			//receiver->Debug();
 			//flightSystem->Debug();
-			//motorController->Debug();
+			motorController->Debug();
 
 			Debug::Print("Last loop time: %dus\n", dt);
 			//Debug::Print("Uptime: %ds\n", timer->Micros() / 1000000);

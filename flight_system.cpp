@@ -5,19 +5,19 @@ using namespace bothezat;
 
 FlightSystem::FlightSystem()
 {
-	Receiver& receiver = Receiver::CurrentReceiver();
 
-	flightModes[FlightMode::MANUAL]		= new ManualMode(receiver);
-	flightModes[FlightMode::ANGLE]		= new AngleMode(receiver);
-
-	currentMode = DEFAULT_MODE;
-	CurrentMode().OnEnter();
 }
 
 void FlightSystem::Setup()
 {
+	flightModes[FlightMode::MANUAL]		= new ManualMode();
+	flightModes[FlightMode::ANGLE]		= new AngleMode();
+
 	for (uint8_t modeIdx = 0; modeIdx < FlightMode::LAST_FLIGHT_MODE; ++modeIdx)
 		flightModes[modeIdx]->Setup();
+
+	currentMode = DEFAULT_MODE;
+	CurrentMode().OnEnter();
 }
 
 void FlightSystem::Debug() const

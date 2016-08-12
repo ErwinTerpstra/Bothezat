@@ -4,6 +4,7 @@
 #include "bothezat.h"
 
 #include "receiver.h"
+#include "motion_sensor.h"
 
 namespace bothezat
 {
@@ -29,14 +30,16 @@ private:
 	Rotation desiredRotation;
 
 protected:
-	Receiver& receiver;
+	Receiver* receiver;
+
+	MotionSensor* motionSensor;
 
 	Config& config;
 
 protected:
-	FlightMode(ID id, Receiver& receiver) : 
+	FlightMode(ID id) : 
 		id(id), desiredOrientation(),
-		receiver(receiver), config(Config::Instance())
+		receiver(NULL), motionSensor(NULL), config(Config::Instance())
 	{
 
 	}
@@ -48,11 +51,27 @@ protected:
 	}
 
 public:
-	virtual void Setup() = 0;
-	virtual void Loop(uint32_t dt) = 0;
+	virtual void Setup()
+	{
+		receiver = &Receiver::CurrentReceiver();
+		motionSensor = &MotionSensor::Instance();
+	};
 
-	virtual void OnEnter() { };
-	virtual void OnExit() { };
+	virtual void Loop(uint32_t dt)
+	{
+
+	};
+
+	virtual void OnEnter() 
+	{
+		SetDesiredOrientation(motionSensor->CurrentOrientation());
+	};
+
+	virtual void OnExit()
+	{
+
+
+	};
 
 	virtual const char* Name() = 0;
 
@@ -68,23 +87,25 @@ private:
 	Quaternion setOrientation;
 
 public:
-	ManualMode(Receiver& receiver) : FlightMode(MANUAL, receiver)
+	ManualMode() : FlightMode(MANUAL)
 	{
 
 	}
 
 	virtual void Setup()
 	{
-
+		FlightMode::Setup();
 	}
 
 	virtual void Loop(uint32_t dt)
 	{
+		FlightMode::Loop(dt);
+
 		// Get rotation stick inputs 
 		Rotation rotation;
-		rotation.yaw = receiver.NormalizedChannel(Receiver::RUDDER);
-		rotation.pitch = receiver.NormalizedChannel(Receiver::ELEVATOR);
-		rotation.roll = receiver.NormalizedChannel(Receiver::AILERON);
+		rotation.yaw = receiver->NormalizedChannel(Receiver::RUDDER);
+		rotation.pitch = receiver->NormalizedChannel(Receiver::ELEVATOR);
+		rotation.roll = receiver->NormalizedChannel(Receiver::AILERON);
 
 		float deltaSeconds = dt * 1e-6f;
 
@@ -108,25 +129,27 @@ class AngleMode : public FlightMode
 {
 
 public:
-	AngleMode(Receiver& receiver) : FlightMode(ANGLE, receiver)
+	AngleMode() : FlightMode(ANGLE)
 	{
 
 	}
 
 	virtual void Setup()
 	{
-
+		FlightMode::Setup();
 	}
 
 	virtual void Loop(uint32_t dt)
 	{ 
+		FlightMode::Loop(dt);
+
 		Rotation rotation = DesiredRotation(); // Copy previous rotation for yaw
-		rotation.pitch = receiver.NormalizedChannel(Receiver::ELEVATOR) * config.FS_ATTI_MAX_PITCH;
-		rotation.roll = receiver.NormalizedChannel(Receiver::AILERON) * config.FS_ATTI_MAX_ROLL;
+		rotation.pitch = receiver->NormalizedChannel(Receiver::ELEVATOR) * config.FS_ATTI_MAX_PITCH;
+		rotation.roll = receiver->NormalizedChannel(Receiver::AILERON) * config.FS_ATTI_MAX_ROLL;
 
 		// Apply relative yaw as we would in manual mode
 		float deltaSeconds = dt * 1e-6f;
-		float yaw = receiver.NormalizedChannel(Receiver::RUDDER);
+		float yaw = receiver->NormalizedChannel(Receiver::RUDDER);
 		rotation.yaw += yaw * config.FS_MAN_ANGULAR_VELOCITY.yaw * deltaSeconds;
 
 		// Create a combined orientation which represents the orientation of the sticks
